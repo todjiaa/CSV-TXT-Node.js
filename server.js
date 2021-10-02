@@ -120,7 +120,7 @@ const createFile = (req, res) => {
         }
 
         fs.appendFile(
-            `./temporaryFiles/${fileName}`, 
+            `${fileName}`, 
             '\r\n\n\n', 
             (err) => {
             if (err) console.log("Wasn't able to create new line in fs.appendFile");
@@ -128,7 +128,7 @@ const createFile = (req, res) => {
             console.log(`2 New Line was created succesfully.`)
 
             fs.appendFile(
-                `./temporaryFiles/${fileName}`, 
+                `${fileName}`, 
                 encodingConverter.encode(vatNumbersTitle + "\r\n", "windows-1251"), 
                 (err) => {
                 if (err) console.log(`Wasn't able to create ${vatNumbersTitle} in fs.appendFile`);
@@ -136,7 +136,7 @@ const createFile = (req, res) => {
                 console.log(`${vatNumbersTitle} was created succesfully.`)
         
                 fs.appendFile(
-                    `./temporaryFiles/${fileName}`, 
+                    `${fileName}`, 
                     encodingConverter.encode(req.body.wrongVatNumbers.join('\r\n'), "windows-1251"), 
                     (err) => {
                     if (err) console.log("Wasn't able to create the wrong VAT numbers in fs.appendFile");
@@ -153,7 +153,6 @@ const createFile = (req, res) => {
 const downloadFile = (req, res) => {
     // const filePath = `./temporaryFiles/${fileName}`;
     const filePath = `${fileName}`;
-
 
     res.download(filePath, (err) => {
         if (err) console.log("Wasn't anble to download the file in res.donwload in /downloadCsvFile foute")
