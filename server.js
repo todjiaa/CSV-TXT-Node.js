@@ -106,7 +106,8 @@ const createFile = (req, res) => {
     // invoicesWithHeader.push([])
 
     fs.writeFile(
-        `./temporaryFiles/${fileName}`, 
+        // `./temporaryFiles/${fileName}`, 
+        `${fileName}`, 
         encodingConverter.encode(invoicesWithHeader.join('\r\n'), "windows-1251"), 
         (err) => {
         if (err) console.log("Wasn't able to create the file in fs.writeFile", err);
@@ -152,7 +153,9 @@ const createFile = (req, res) => {
 }
 
 const downloadFile = (req, res) => {
-    const filePath = `./temporaryFiles/${fileName}`;
+    // const filePath = `./temporaryFiles/${fileName}`;
+    const filePath = `${fileName}`;
+
 
     res.download(filePath, (err) => {
         if (err) console.log("Wasn't anble to download the file in res.donwload in /downloadCsvFile foute")

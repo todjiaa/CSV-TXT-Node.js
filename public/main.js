@@ -66,7 +66,7 @@ const createFile = (sortedData, wrongVatNumbers) => {
     fetch("/createCsvFile", optionsCsvFile)
     .then(res => {
         if (res.status === 200) {
-            // downloadForm.submit()
+            downloadForm.submit()
 
             downloadButton.disabled = true;
         }
