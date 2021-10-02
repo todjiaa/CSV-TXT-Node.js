@@ -109,7 +109,7 @@ const createFile = (req, res) => {
         `./temporaryFiles/${fileName}`, 
         encodingConverter.encode(invoicesWithHeader.join('\r\n'), "windows-1251"), 
         (err) => {
-        if (err) console.log("Wasn't able to create the file in fs.writeFile");
+        if (err) console.log("Wasn't able to create the file in fs.writeFile", err);
         
         console.log(`${fileName} was created succesfully.`)
 
@@ -175,7 +175,7 @@ app.post("/createCsvFile", (req, res) => {
 })
 
 app.post("/downloadCsvFile", (req, res) => {
-    downloadFile(req, res);
+    // downloadFile(req, res);
 
     // downloadExcelFile(req, res);
 })
