@@ -175,7 +175,7 @@ app.post("/createCsvFile", (req, res) => {
 })
 
 app.post("/downloadCsvFile", (req, res) => {
-    // downloadFile(req, res);
+    downloadFile(req, res);
 
     // downloadExcelFile(req, res);
 })
