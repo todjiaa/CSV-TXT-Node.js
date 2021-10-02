@@ -113,39 +113,41 @@ const createFile = (req, res) => {
         
         console.log(`${fileName} was created succesfully.`)
 
-        if (req.body.wrongVatNumbers.length === 0) {
-            res.send();
-            return
-        }
+        res.send("success")
 
-        fs.appendFile(
-            `./temporaryFiles/${fileName}`, 
-            '\r\n\n\n', 
-            (err) => {
-            if (err) console.log("Wasn't able to create new line in fs.appendFile");
+        // if (req.body.wrongVatNumbers.length === 0) {
+        //     res.send();
+        //     return
+        // }
+
+        // fs.appendFile(
+        //     `./temporaryFiles/${fileName}`, 
+        //     '\r\n\n\n', 
+        //     (err) => {
+        //     if (err) console.log("Wasn't able to create new line in fs.appendFile");
             
-            console.log(`2 New Line was created succesfully.`)
+        //     console.log(`2 New Line was created succesfully.`)
 
-            fs.appendFile(
-                `./temporaryFiles/${fileName}`, 
-                encodingConverter.encode(vatNumbersTitle + "\r\n", "windows-1251"), 
-                (err) => {
-                if (err) console.log(`Wasn't able to create ${vatNumbersTitle} in fs.appendFile`);
+        //     fs.appendFile(
+        //         `./temporaryFiles/${fileName}`, 
+        //         encodingConverter.encode(vatNumbersTitle + "\r\n", "windows-1251"), 
+        //         (err) => {
+        //         if (err) console.log(`Wasn't able to create ${vatNumbersTitle} in fs.appendFile`);
                 
-                console.log(`${vatNumbersTitle} was created succesfully.`)
+        //         console.log(`${vatNumbersTitle} was created succesfully.`)
         
-                fs.appendFile(
-                    `./temporaryFiles/${fileName}`, 
-                    encodingConverter.encode(req.body.wrongVatNumbers.join('\r\n'), "windows-1251"), 
-                    (err) => {
-                    if (err) console.log("Wasn't able to create the wrong VAT numbers in fs.appendFile");
+        //         fs.appendFile(
+        //             `./temporaryFiles/${fileName}`, 
+        //             encodingConverter.encode(req.body.wrongVatNumbers.join('\r\n'), "windows-1251"), 
+        //             (err) => {
+        //             if (err) console.log("Wasn't able to create the wrong VAT numbers in fs.appendFile");
                     
-                    console.log(`Wrong VAT numbers were created succesfully.`)
+        //             console.log(`Wrong VAT numbers were created succesfully.`)
             
-                    res.send();
-                })
-            })
-        })
+        //             res.send();
+        //         })
+        //     })
+        // })
     })
 }
 
