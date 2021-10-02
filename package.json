@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "excel4node": "^1.7.2",
+    "express": "^4.17.1",
+    "iconv-lite": "^0.6.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.0"
+  }
+}
