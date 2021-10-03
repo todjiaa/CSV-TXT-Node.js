@@ -1,15 +1,12 @@
 // import express from "express";
-// const { json } = require('body-parser');
 const express = require('express')
 const app = express();
 const PORT = process.env.PORT || 4000;
-// const router = express.Router();
 
 const fs = require("fs");
-const encodingConverter = require("iconv-lite");
+// const encodingConverter = require("iconv-lite");
 
-
-// app.use("/", router);
+const excel = require("excel4node");
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
@@ -22,8 +19,6 @@ app.listen(PORT, () => {
     console.log(`Server is running at port: ${PORT}`)
 })
 
-
-// let fileName;
 let excelFileName;
 
 const getDate = () => {
@@ -35,22 +30,7 @@ const getDate = () => {
     }
 }
 
-const excel = require("excel4node");
-const workBook = new excel.Workbook();
-
-const missingInvoicesWorkSheet = workBook.addWorksheet("Missing Invoices");
-const wrongVatNumberInvoicesWorkSheet = workBook.addWorksheet("Wrong VAT Number Invoices");
-
-const style = workBook.createStyle({
-    font: {
-        color: "#000000",
-        size: 12
-    },
-    // numberFormat: '$#,##0.00; ($#,##0.00); -',
-})
-
-
-const fillMIssingInvoicesInWorkSheet = (data) => {
+const fillMIssingInvoicesInWorkSheet = (data, missingInvoicesWorkSheet, style) => {
     data.forEach((row, rowIndex) => {
         missingInvoicesWorkSheet.cell(rowIndex+1, 1)
         .style(style);
@@ -63,7 +43,7 @@ const fillMIssingInvoicesInWorkSheet = (data) => {
     })
 }
 
-fillWrongVatNumberInvoicesInWorkSheet = (data) => {
+fillWrongVatNumberInvoicesInWorkSheet = (data, wrongVatNumberInvoicesWorkSheet, style) => {
     data.forEach((row, rowIndex) => {
         wrongVatNumberInvoicesWorkSheet.cell(rowIndex+1, 1)
         .style(style);
@@ -79,14 +59,26 @@ fillWrongVatNumberInvoicesInWorkSheet = (data) => {
 const createExcelFile = (req, res) => {
     const {day, month, year} = getDate();
 
-    fillMIssingInvoicesInWorkSheet(req.body.concatenatedData);
+    excelFileName = `Results-${day}_${month}_${year}_${Date.now()}.xlsx`;
+
+    const workBook = new excel.Workbook();
+
+    const style = workBook.createStyle({
+        font: {
+            color: "#000000",
+            size: 12
+        },
+        // numberFormat: '$#,##0.00; ($#,##0.00); -',
+    })
+
+    const missingInvoicesWorkSheet = workBook.addWorksheet("Missing Invoices");
+
+    fillMIssingInvoicesInWorkSheet(req.body.concatenatedData, missingInvoicesWorkSheet, style);
 
     if (req.body.wrongVatNumberInvoices.length !== 0) {
-        fillWrongVatNumberInvoicesInWorkSheet(req.body.wrongVatNumberInvoices);
+        const wrongVatNumberInvoicesWorkSheet = workBook.addWorksheet("Wrong VAT Number Invoices");
+        fillWrongVatNumberInvoicesInWorkSheet(req.body.wrongVatNumberInvoices, wrongVatNumberInvoicesWorkSheet, style);
     }
-   
-
-    excelFileName = `Results-${day}_${month}_${year}_${Date.now()}.xlsx`;
 
     workBook.write(
         `${excelFileName}`,
