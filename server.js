@@ -35,9 +35,11 @@ const getDate = () => {
     }
 }
 
-
 const excel = require("excel4node");
 const workBook = new excel.Workbook();
+
+const missingInvoicesWorkSheet = workBook.addWorksheet("Missing Invoices");
+const wrongVatNumberInvoicesWorkSheet = workBook.addWorksheet("Wrong VAT Number Invoices");
 
 const style = workBook.createStyle({
     font: {
@@ -47,14 +49,14 @@ const style = workBook.createStyle({
     // numberFormat: '$#,##0.00; ($#,##0.00); -',
 })
 
+
 const fillMIssingInvoicesInWorkSheet = (data) => {
-    const workSheet = workBook.addWorksheet("Missing Invoices");
     data.forEach((row, rowIndex) => {
-        workSheet.cell(rowIndex+1, 1)
+        missingInvoicesWorkSheet.cell(rowIndex+1, 1)
         .style(style);
 
         row.forEach((cell, cellIndex) => {
-            workSheet.cell(rowIndex+1, cellIndex+1)
+            missingInvoicesWorkSheet.cell(rowIndex+1, cellIndex+1)
             .string(cell)
             .style(style);
         })
@@ -62,26 +64,27 @@ const fillMIssingInvoicesInWorkSheet = (data) => {
 }
 
 fillWrongVatNumberInvoicesInWorkSheet = (data) => {
-    const workSheet = workBook.addWorksheet("Wrong VAT Number Invoices");
     data.forEach((row, rowIndex) => {
-        workSheet.cell(rowIndex+1, 1)
+        wrongVatNumberInvoicesWorkSheet.cell(rowIndex+1, 1)
         .style(style);
 
         row.forEach((cell, cellIndex) => {
-            workSheet.cell(rowIndex+1, cellIndex+1)
+            wrongVatNumberInvoicesWorkSheet.cell(rowIndex+1, cellIndex+1)
             .string(cell)
             .style(style);
         })
     })
 }
 
-
 const createExcelFile = (req, res) => {
     const {day, month, year} = getDate();
 
     fillMIssingInvoicesInWorkSheet(req.body.concatenatedData);
 
-    fillWrongVatNumberInvoicesInWorkSheet(req.body.wrongVatNumberInvoices);
+    if (req.body.wrongVatNumberInvoices.length !== 0) {
+        fillWrongVatNumberInvoicesInWorkSheet(req.body.wrongVatNumberInvoices);
+    }
+   
 
     excelFileName = `Results-${day}_${month}_${year}_${Date.now()}.xlsx`;
 
@@ -101,12 +104,12 @@ const downloadExcelFile = (req, res) => {
     const excelFilePath = `${excelFileName}`;
 
     res.download(excelFilePath, (err) => {
-        if (err) console.log("Wasn't anble to download the file in res.donwload in /downloadCsvFile foute")
+        if (err) console.log("Wasn't anble to download the file in res.donwload in /downloadExcelFile route")
 
         console.log("File was downloaded")
 
         fs.unlink(excelFilePath, (error) => {
-            if (error) console.log("Wasn't able to delete the file in fs.unlink in /downloadCsvFile route");
+            if (error) console.log("Wasn't able to delete the file in fs.unlink in /downloadExcelFile route");
 
             console.log("file was deleted")
         })
