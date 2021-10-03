@@ -26,11 +26,11 @@ const findMissingInvoicesInCsvFile = () => {
         const txtArray = [].concat.apply([], files.txtFilesArray);
         const csvArray = [].concat.apply([], files.csvFilesArray);
 
-        const [missingInvoices, wrongVatNumbers] = compareFiles(csvArray, txtArray);
+        const [missingInvoices, wrongVatNumberInvoices] = compareFiles(csvArray, txtArray);
 
         const [filesArray] = separateMissingInvoicesByFile(missingInvoices);
 
-        const [sortedData] = sortTheData(filesArray, wrongVatNumbers);       
+        const [sortedData] = sortTheData(filesArray, wrongVatNumberInvoices);       
         
         downloadWrapper.classList.add("show-flex");
         
@@ -39,7 +39,7 @@ const findMissingInvoicesInCsvFile = () => {
         sessionStatus.completed = true;
 
         downloadButton.addEventListener("click", function handler() {
-            createFile(sortedData, wrongVatNumbers);
+            createFile(sortedData, wrongVatNumberInvoices);
 
             downloadButton.removeEventListener("click", handler);
         });
@@ -47,20 +47,20 @@ const findMissingInvoicesInCsvFile = () => {
 }
 
 
-const createFile = (sortedData, wrongVatNumbers) => {
+const createFile = (sortedData, wrongVatNumberInvoices) => {
     const concatenatedData = [].concat.apply([], sortedData);
+
+    const data = {
+        concatenatedData: concatenatedData,
+        wrongVatNumberInvoices: wrongVatNumberInvoices,
+    }
 
     const optionsCsvFile = {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-            {
-                concatenatedData: concatenatedData,
-                wrongVatNumbers: wrongVatNumbers
-            }
-        )
+        body: JSON.stringify(data)
     }
     
     fetch("/createCsvFile", optionsCsvFile)

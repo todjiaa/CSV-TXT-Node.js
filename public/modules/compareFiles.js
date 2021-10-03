@@ -17,7 +17,7 @@ import { csvFileIdCellNumber, txtFileIdCellNumber } from "./variablesAndFlags.js
 
 export const compareFiles = (csvArray, txtArray) => {
     const commonRows = [];
-    const wrongVatNumbers = [];
+    const wrongVatNumberInvoices = [];
     
     csvArray.forEach(csvRow => {
         txtArray.forEach(txtRow => {
@@ -25,7 +25,7 @@ export const compareFiles = (csvArray, txtArray) => {
                 commonRows.push(csvRow);
 
                 if (csvRow[0] !== txtRow[4]) {
-                    wrongVatNumbers.push(txtRow);
+                    wrongVatNumberInvoices.push(txtRow);
                 }
             }
         })
@@ -33,5 +33,5 @@ export const compareFiles = (csvArray, txtArray) => {
     })
     const missingRowsArray = csvArray.filter(row => !commonRows.includes(row));
 
-    return [missingRowsArray, wrongVatNumbers];
+    return [missingRowsArray, wrongVatNumberInvoices];
 }
