@@ -9,6 +9,10 @@ export const showNotification = (attribute, text) => {
     notificationText.textContent = notificationText.getAttribute(attribute);
     
     notificationWrapper.classList.add("show-flex");
+
+    setTimeout(() => {
+        notificationWrapper.classList.remove("show-flex");
+    }, 3000);
 }
 
 // Hide notification 

@@ -32,3 +32,5 @@ export const loginContainer = document.querySelector(".login-container");
 export const downloadWrapper = document.querySelector(".download-wrapper");
 export const downloadForm = downloadWrapper.querySelector(".download-form");
 export const downloadButton = downloadForm.querySelector(".download-button");
+
+// export const registrationName = document.querySelector(".registration-section_name");

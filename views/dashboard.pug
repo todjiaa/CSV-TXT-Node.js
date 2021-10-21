@@ -1,0 +1,58 @@
+doctype html 
+html 
+    head
+        meta(charset="UTF-8")
+        meta(http-equiv="X-UA-Compatible" content="IE=edge")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        link(rel="stylesheet" href="style.css")
+        title Home page 
+    body 
+        //- Header
+        div.header
+            h1 Find Missing Invoices in CSV
+            //- h2 Hello #{name}
+            if name 
+                h2 Hello #{name}
+            form(action="logout", method="post")
+                button.header_logout Log out
+        //- Inputs Container 
+        div.inputs-container
+            //- Txt file names list
+            div.txt-list-container
+                h3 Txt List:
+                div.txt-list-wrapper
+                    ul.txt-ul
+            //- Inputs wrapper
+            div.inputs-wrapper
+                //- Txt files input section
+                div.txt-section
+                    label(class="txt-label label" for="txt-input") Upload TXT File:
+                    input(class="txt-input input" id="txt-input" type="file" accept=".txt" multiple)
+                //- Csv files input section
+                div.csv-section
+                    label(class="csv-label label" for="csv-input") Upload CSV File:
+                    input(class="csv-input input" id="csv-input" type="file" accept=".csv" multiple)
+            //- Csv file names list
+            div.csv-list-container
+                h3 Csv List:
+                div.csv-list-wrapper
+                    ul.csv-ul
+        //- Find and Reset buttons wrapper
+        div.find-reset-buttons-wrapper
+            button.find-missing-button Find Missing
+            button.reset-button Reset 
+        //- Missing invoices results wrapper
+        div.missing-invoices-wrapper
+            //- Loading Gif wrapper
+            div.loading-gif-wrapper
+                img.loading-gif(src="/loading_gif/loading.gif" alt="Loading")
+        //- Notification when the user is required to reset the session
+        div.notification-wrapper
+            div.close-notification-wrapper
+                span.close-notification x
+            p.notification-text(data-reset data-loaded)
+        div.download-wrapper
+            form.download-form(action="/downloadCsvFile" method="POST")
+                button.download-button(type="button") Download File
+        //- JS Main module
+        script(src="main.js" type="module")

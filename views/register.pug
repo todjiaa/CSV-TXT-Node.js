@@ -1,0 +1,18 @@
+doctype html
+html 
+    head
+        meta(charset="UTF-8")
+        meta(http-equiv="X-UA-Compatible" content="IE=edge")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title Registration page
+    body
+        section.registration-section 
+            //- - const notification = `${flashNotification ? flashNotification : ""}`
+            p.registration-section_notification #{statusMessage}
+            form(action="register" method="POST") 
+                input.registration-section_name(name="name" type="text" placeholder="Name" required)
+                input.registration-section_email(name="email" type="email" placeholder="Email" required)
+                input.registration-section_password(name="password" type="password" placeholder="Password" required)
+                button.registration-section_submit(type="submit") Sign up
+        p Go to 
+            a(href="login") Login

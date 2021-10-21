@@ -4,7 +4,6 @@ import { noEmptyStrings } from "./noEmptyStrings.js";
 
 export const sortTheData = (filesArray, wrongVatNumbers) => {
     let missingInvoices = [];
-
     let allTheSortedData = [];
 
     filesArray.forEach(file => {
@@ -13,7 +12,6 @@ export const sortTheData = (filesArray, wrongVatNumbers) => {
                 const rowNoQuotes = row.map(line => {
                     return line.split(" ").join("").replace(/['"]+/g,"").replace(/[,]+/g," ");
                 })
-
                 missingInvoices.push(rowNoQuotes);
             }
         })
@@ -36,25 +34,21 @@ export const sortTheData = (filesArray, wrongVatNumbers) => {
             missingInvoices, 
             "data-missing", 
             tableTitle,
-            "No Missing Invoices in CSV File"
+            "Няма липсващи фактури в csv файла."
         );
         createTable(missingInvoices, header);
 
         createTableTitle(
             wrongVatNumbers,
             "data-vat", 
-            "The following are invoices with wrong VAT numbers:",
-            "All VAT numbers are matching"
+            "Фактури с грешни номера:",
+            "Няма грешни номера на фактури."
         );
         createTable(wrongVatNumbers);
 
-
-        // allTheSortedData.push(tableTitleNoCommas, [headerNoCommas], missingInvoices);
         allTheSortedData.push([headerNoCommas], missingInvoices);
-
 
         missingInvoices = [];
     })
-
     return [allTheSortedData]
 }

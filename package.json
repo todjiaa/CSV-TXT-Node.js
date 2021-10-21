@@ -10,12 +10,16 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.19.0",
+    "bcrypt": "^5.0.1",
     "excel4node": "^1.7.2",
     "express": "^4.17.1",
-    "iconv-lite": "^0.6.3"
+    "express-session": "^1.17.2",
+    "iconv-lite": "^0.6.3",
+    "pug": "^3.0.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "dotenv": "^10.0.0",
     "nodemon": "^1.19.0"
   }
 }

@@ -1,6 +1,6 @@
 import { compareFiles } from "./modules/compareFiles.js";
 import { separateMissingInvoicesByFile } from "./modules/separateMissingInvoicesByFile.js";
-import { hideNotification } from "./modules/showHideNotification.js";
+import { showNotification, hideNotification } from "./modules/showHideNotification.js";
 import { onTxtInputChange, onCsvInputChange } from "./modules/onInputChange.js";
 import { resetSession } from "./modules/resetSession.js";
 import { sortTheData } from "./modules/sortTheData.js";
@@ -75,9 +75,6 @@ const createFile = (sortedData, wrongVatNumberInvoices) => {
 
 
 
-
-
-
 // On change event listener on the txt and csv inputs
 txtFileInput.addEventListener("change", onTxtInputChange);
 csvFileInput.addEventListener("change", onCsvInputChange);
@@ -94,12 +91,6 @@ document.querySelector(".reset-button").addEventListener("click", () => {
 
 // Click event on the "X" span of the notification that triggers the function closing the resetSession notification 
 document.querySelector(".close-notification-wrapper").addEventListener("click", hideNotification);
-
-// document.querySelector(".login-button").addEventListener("click", login);
-
-// document.querySelector(".registration-button").addEventListener("click", registration);
-
-
 
 
 
@@ -142,30 +133,30 @@ document.querySelector(".close-notification-wrapper").addEventListener("click", 
 
 
 
-// // const toma = {
-// //     name: "Toma",
-// //     age: 36,
-// //     designation: "Sound-engineer"
-// // }
+// const toma = {
+//     name: "Toma",
+//     age: 36,
+//     designation: "Sound-engineer"
+// }
 
-// // const dimana = {
-// //     name: "Dimana",
-// //     age: 37,
-// //     designation: "Artist"
-// // }
+// const dimana = {
+//     name: "Dimana",
+//     age: 37,
+//     designation: "Artist"
+// }
 
 
-// // const optionsUsers = {
-// //     method: "POST",
-// //     // mode: 'no-cors', // no-cors, *cors, same-origin,
-// //     headers: {
-// //         'Content-Type': 'application/json',
-// //     },
-// //     body: JSON.stringify(toma)
-// // }
+// const optionsUsers = {
+//     method: "POST",
+//     // mode: 'no-cors', // no-cors, *cors, same-origin,
+//     headers: {
+//         'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(toma)
+// }
 
-// // const responseUsers = fetch("/users", optionsUsers)
-// // .then(response => response.json())
-// // .then(data => console.log(data))
+// const responseUsers = fetch("/users", optionsUsers)
+// .then(response => response.json())
+// .then(data => console.log(data))
 
-// // console.log(responseUsers)
+// console.log(responseUsers)
