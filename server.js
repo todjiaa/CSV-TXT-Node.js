@@ -35,8 +35,8 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
 app.use(session({
-    name: SESSION_NAME,
-    secret: SESSION_SECRET,
+    name: "sid",
+    secret: "The@key#!that!?will12376sign%#the#$^*(cookie)",
     resave: false,
     saveUninitialized: false,
     // store: Set this option when using real database
