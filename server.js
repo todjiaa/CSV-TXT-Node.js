@@ -4,15 +4,14 @@ const express = require('express');
 const session = require("express-session");
 const app = express();
 
+const PORT = process.env.PORT || 4000;
 
 const {
     SESSION_SECRET,
     SESSION_NAME,
-    PORT
     
 } = process.env
 
-const port = PORT || 4000;
 const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
 
 
@@ -286,6 +285,6 @@ app.post("/downloadCsvFile", (req, res) => {
 })
 
 
-app.listen(port, () => {
-    console.log(`Server is running at port: ${port}`)
+app.listen(PORT, () => {
+    console.log(`Server is running at port: ${PORT}`)
 })
