@@ -1,20 +1,8 @@
 [
   {
-    "id": "f93b9fe9-f5a7-424e-bb45-108fa807fe3b",
+    "id": "1753d4ce-5e06-4947-98af-077b21162bb5",
     "name": "Toma",
     "email": "toma_hristov@yahoo.com",
-    "password": "$2b$10$04tL.WFSLVzSVDM1zBVFAOcMbcwqHdImrjCLthdL8vbhyAKTmyz46"
-  },
-  {
-    "id": "4b2cb275-9fc9-4ba2-87b7-ca9e807c5045",
-    "name": "Dimana",
-    "email": "d@d",
-    "password": "$2b$10$LujjqQeu83pAd2Z2SfnPH.rQE/o.ayZ7LKAEZFAAZXYUIeHhb86sa"
-  },
-  {
-    "id": "c7954d1c-0dec-4f10-8550-8000aea5fc7d",
-    "name": "w",
-    "email": "sadsfa@adsfasdf",
-    "password": "$2b$10$RhlMR8CDUJvRIvcMvXUn..iz.CasiAjuBD8aaRID1pmsg2JR.pY5e"
+    "password": "$2a$10$VAVZgzOXnGaOQqoRn4l8CO/hOj.J6VyR0Gw6HKDEQZR5kJ2yjep22"
   }
 ]

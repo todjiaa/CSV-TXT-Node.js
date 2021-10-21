@@ -20,7 +20,7 @@ const fs = require("fs");
 // const encodingConverter = require("iconv-lite");
 require("pug");
 const { v4: uuidv4 } = require('uuid');
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 // const bcrypt = "";
 
 
