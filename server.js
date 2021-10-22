@@ -6,9 +6,13 @@
 // require("dotenv").config();
 
 
+
 const express = require('express');
 const session = require("express-session");
 const app = express();
+
+const dotenv = require("dotenv");
+dotenv.config();
 
 const {
     SESSION_SECRET,
@@ -16,8 +20,7 @@ const {
     PORT
 } = process.env
 
-const serverPort = PORT || 4000;
-
+const SERVER_PORT = PORT || 4000;
 const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
 
 const excel = require("excel4node");
@@ -290,7 +293,6 @@ const downloadExcelFile = (req, res) => {
 }
 
 
-
 app.post("/createCsvFile", (req, res) => {
     createExcelFile(req, res);
 })
@@ -299,7 +301,6 @@ app.post("/downloadCsvFile", (req, res) => {
     downloadExcelFile(req, res);
 })
 
-
-app.listen(serverPort, () => {
-    console.log(`Server is running at port: ${serverPort}`)
+app.listen(SERVER_PORT, () => {
+    console.log(`Server is running at port: ${SERVER_PORT}`)
 })
