@@ -1,32 +1,34 @@
 // import express from "express";
+
+
 // require("dotenv/config");
+
+require("dotenv").config();
+
+
 const express = require('express');
 const session = require("express-session");
 const app = express();
 
-const PORT = process.env.PORT || 4000;
-
 const {
     SESSION_SECRET,
     SESSION_NAME,
-    
+    PORT
 } = process.env
+
+const serverPort = PORT || 4000;
 
 const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
 
-
 const excel = require("excel4node");
 const fs = require("fs");
-// const encodingConverter = require("iconv-lite");
+// const encodingConverter = require("iconv-lite"); !!!!DELETE THIS DEPENDENCY AT THE END
 require("pug");
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require("bcryptjs");
 
-
 const insertDataToFile = require("./controllers/insertDataToFile");
 const readFile = require("./controllers/readFile");
-const { application } = require('express');
-
 
 app.set("view-engine", "pug");
 
@@ -34,8 +36,8 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
 app.use(session({
-    name: "sid",
-    secret: "The@key#!that!?will12376sign%#the#$^*(cookie)",
+    name: SESSION_NAME,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     // store: Set this option when using real database
@@ -298,6 +300,6 @@ app.post("/downloadCsvFile", (req, res) => {
 })
 
 
-app.listen(PORT, () => {
-    console.log(`Server is running at port: ${PORT}`)
+app.listen(serverPort, () => {
+    console.log(`Server is running at port: ${serverPort}`)
 })
