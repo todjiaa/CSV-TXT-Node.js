@@ -46,12 +46,6 @@ app.use(session({
     }
 }))
 
-// app.use((req, res, next) => {
-//     res.locals.succesfullRegistration = app.locals.succesfullRegistration;
-
-//     res.locals.userExists = "This user already exists.";
-//     next()
-// })
 
 const redirectLogin = (req, res, next) => {
     if (!req.session.userId) {
@@ -74,18 +68,17 @@ app.get("/", redirectDashboard, (req, res) => {
 })
 
 app.get("/login", redirectDashboard, (req, res) => {
-    console.log("Locals before", app.locals.succesfullRegistration)
-
-    res.render("login.pug", {succesfullRegistration: app.locals.succesfullRegistration});
+    res.render("login.pug");
 
     app.locals.succesfullRegistration = "";
-
-    console.log("Locals after", app.locals.succesfullRegistration)
-
+    app.locals.statusMessage = "";
+    app.locals.userStatus = "";
 })
 
 app.get("/register", redirectDashboard, (req, res) => {
     res.render("register.pug");
+
+    app.locals.statusMessage = "";
 })
 
 app.get("/dashboard", redirectLogin, (req, res) => {
@@ -95,8 +88,6 @@ app.get("/dashboard", redirectLogin, (req, res) => {
 
 app.post("/register", (req, res) => {
     readFile("./users.json", "utf-8", async (data) => {
-        const successfullRegistrationNotification = "You have registered succesfully! Please Log in."
-
         try {
             const hashedPass = await bcrypt.hash(req.body.password, 10)
     
@@ -112,7 +103,7 @@ app.post("/register", (req, res) => {
     
                 insertDataToFile("./users.json", newUserCredentials);
     
-                app.locals.succesfullRegistration = successfullRegistrationNotification;
+                app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
     
                 return res.redirect("/login");
             }
@@ -124,23 +115,26 @@ app.post("/register", (req, res) => {
     
             if (newUser) {
                 console.log("This user already exists")
+
+                app.locals.statusMessage = "This user already exists."
     
-                res.render("register.pug", {statusMessage: "This user already exists."});
+                res.redirect("/register");
             }
             else {
                 insertDataToFile("./users.json", newUserCredentials);
     
                 console.log("Just added a new user")
     
-                app.locals.succesfullRegistration = successfullRegistrationNotification;
+                app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
     
                 res.redirect("/login");
             }
         } catch {
             console.log("Something went wrong registering you.");
 
+            app.locals.statusMessage = "Something went wrong, please try again.";
 
-            res.render("register.pug", {statusMessage: "Something went wrong, please try again."});
+            res.redirect("/register");
         }
     })
 })
@@ -149,8 +143,10 @@ app.post("/login", (req, res) => {
     readFile("./users.json", "utf-8", async (data) => {
         if (!data) {
             console.log("Data base is empty")
-            
-            return res.render("login.pug", {userStatus: "This user doesn't exist. Sign up please!"})
+
+            app.locals.userStatus = "This user doesn't exist. Sign up please!";
+
+            return res.redirect("/login");
         }
         const usersDataBase = JSON.parse(data);
         
@@ -170,15 +166,18 @@ app.post("/login", (req, res) => {
             }
             else {
                 console.log("Wrong credentials")
+
+                app.locals.userStatus = "Wrong user name or password.";
     
-                res.render("login.pug", {userStatus: "Wrong user name or password."})
+                res.redirect("/login")
             }
         } catch {
             console.log("Catched")
 
-            res.render("login.pug", {userStatus: "Wrong user name or password."})
-        }
+            app.locals.userStatus = "Wrong user name or password.";
 
+            res.redirect("/login")
+        }
     })
 })
 
