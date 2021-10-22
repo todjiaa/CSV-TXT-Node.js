@@ -1,4 +1,4 @@
 node_modules
 .env
 users.json
-.gitignore
+request.rest
