@@ -21,7 +21,6 @@ const fs = require("fs");
 require("pug");
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require("bcryptjs");
-// const bcrypt = "";
 
 
 const insertDataToFile = require("./controllers/insertDataToFile");
@@ -46,6 +45,13 @@ app.use(session({
     }
 }))
 
+// app.use((req, res, next) => {
+//     res.locals.succesfullRegistration = app.locals.succesfullRegistration;
+
+//     res.locals.userExists = "This user already exists.";
+//     next()
+// })
+
 const redirectLogin = (req, res, next) => {
     if (!req.session.userId) {
         res.redirect("/login");
@@ -67,6 +73,8 @@ app.get("/", redirectDashboard, (req, res) => {
 })
 
 app.get("/login", redirectDashboard, (req, res) => {
+    console.log(app.locals.succesfullRegistration)
+
     res.render("login.pug", {succesfullRegistration: app.locals.succesfullRegistration});
 })
 
@@ -75,7 +83,7 @@ app.get("/register", redirectDashboard, (req, res) => {
 })
 
 app.get("/dashboard", redirectLogin, (req, res) => {
-    res.render("dashboard.pug")
+    res.render("dashboard.pug");
 })
 
 
