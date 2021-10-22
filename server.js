@@ -85,7 +85,6 @@ app.get("/dashboard", redirectLogin, (req, res) => {
     res.render("dashboard.pug");
 })
 
-
 app.post("/register", (req, res) => {
     readFile("./users.json", "utf-8", async (data) => {
         try {
