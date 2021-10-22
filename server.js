@@ -25,6 +25,7 @@ const bcrypt = require("bcryptjs");
 
 const insertDataToFile = require("./controllers/insertDataToFile");
 const readFile = require("./controllers/readFile");
+const { application } = require('express');
 
 
 app.set("view-engine", "pug");
@@ -73,9 +74,14 @@ app.get("/", redirectDashboard, (req, res) => {
 })
 
 app.get("/login", redirectDashboard, (req, res) => {
-    console.log(app.locals.succesfullRegistration)
+    console.log("Locals before", app.locals.succesfullRegistration)
 
     res.render("login.pug", {succesfullRegistration: app.locals.succesfullRegistration});
+
+    app.locals.succesfullRegistration = "";
+
+    console.log("Locals after", app.locals.succesfullRegistration)
+
 })
 
 app.get("/register", redirectDashboard, (req, res) => {
@@ -133,6 +139,7 @@ app.post("/register", (req, res) => {
         } catch {
             console.log("Something went wrong registering you.");
 
+
             res.render("register.pug", {statusMessage: "Something went wrong, please try again."});
         }
     })
@@ -168,7 +175,7 @@ app.post("/login", (req, res) => {
             }
         } catch {
             console.log("Catched")
-    
+
             res.render("login.pug", {userStatus: "Wrong user name or password."})
         }
 
