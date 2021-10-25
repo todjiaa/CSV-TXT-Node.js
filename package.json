@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon -r dotenv/config server.js"
   },
   "keywords": [],
   "author": "",
@@ -24,3 +24,5 @@
     "nodemon": "^1.19.0"
   }
 }
+
+

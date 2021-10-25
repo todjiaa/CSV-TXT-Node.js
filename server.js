@@ -6,8 +6,11 @@ const app = express();
 
 // require('dotenv').config({ silent: process.env.NODE_ENV === 'production' })
 
+// const envirement = process.env.NODE_ENV || "development";
+
 
 const {
+    NODE_ENV,
     PORT,
     SESSION_SECRET,
     SESSION_NAME,
@@ -19,6 +22,12 @@ const {
 } = process.env
 
 const SERVER_PORT = PORT || 4000;
+
+console.log(NODE_ENV)
+
+if (NODE_ENV === "development") {console.log("In develpment")}
+if (NODE_ENV === "production") {console.log("In production")}
+
 
 const mysql = require("mysql2");
 const excel = require("excel4node");
