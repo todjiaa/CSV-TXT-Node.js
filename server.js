@@ -50,6 +50,10 @@ const sessionStoreOptions = {
     database: "sql11446093",
     port: parseInt(DATABASE_PORT),
     createDatabaseTable: true,
+    exparation: SESSION_LIFETIME,
+    clearExpired: true,
+    checkExpirationInterval: parseInt(SESSION_LIFETIME) + 60000,
+    endConnectionOnClose: true,
     schema: {
         tableName: "sessions",
         columnNames: {
@@ -241,9 +245,9 @@ app.post("/logout", (req, res) => {
     res.clearCookie(SESSION_NAME);
 
     sessionStore.destroy(SESSION_NAME, (err) => {
-        if (err) console.log("Didn't manage to delete the session")
-
-        console.log("Session deleted")
+        if (err) console.log("Didn't manage to delete the session");
+        
+        console.log("Session deleted");
     })
 
     res.redirect("/login");
