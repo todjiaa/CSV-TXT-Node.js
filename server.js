@@ -7,14 +7,20 @@ const app = express();
 // require("dotenv").config();
 
 const {
+    PORT,
     SESSION_SECRET,
     SESSION_NAME,
-    PORT
+    SESSION_LIFETIME,
+    DATABASE_HOST,
+    DATABASE_PORT,
+    DATABASE_USER,
+    DATABASE_PASSWORD,
 } = process.env
 
 const SERVER_PORT = PORT || 4000;
-const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
+// const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
 
+const mysql = require("mysql2");
 const excel = require("excel4node");
 const fs = require("fs");
 // const encodingConverter = require("iconv-lite"); !!!!DELETE THIS DEPENDENCY AT THE END
@@ -27,6 +33,45 @@ const readFile = require("./controllers/readFile");
 
 app.set("view-engine", "pug");
 
+const dbConfig = {
+    host: DATABASE_HOST,
+    user: DATABASE_USER,
+    password: DATABASE_PASSWORD,
+    database: "sql11446093",
+    port: parseInt(DATABASE_PORT)
+}
+
+const db = mysql.createConnection(dbConfig);
+
+db.connect((err) => {
+    if (err) console.log("Didn't manage to connect to database")
+    
+    console.log("My sql connected")
+})
+
+const insertUser = (newUser) => {
+    const sql = `INSERT INTO users Set ?`
+    
+    db.query(sql, newUser, (err) => {
+        if (err) console.log("There was an error inserting the user in the DB")
+        
+        console.log("User inserted")
+    })
+}
+
+const getUsers = (callback) => {
+    const sql = `SELECT * FROM users`
+    
+    db.query(sql, (err, users) => {
+        if (err) console.log("There was an error inserting the user in the DB")
+        
+        console.log("Users retrieved")
+
+        callback(users);
+    })
+}
+
+
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
@@ -37,7 +82,7 @@ app.use(session({
     saveUninitialized: false,
     // store: Set this option when using real database
     cookie: {
-        maxAge: SESSION_LIFETIME,
+        maxAge: parseInt(SESSION_LIFETIME),
         sameSite: true,
         // secure: true - Set this option only if the website is using https!
     }
@@ -83,41 +128,39 @@ app.get("/dashboard", redirectLogin, (req, res) => {
 })
 
 app.post("/register", (req, res) => {
-    readFile("./users.json", "utf-8", async (data) => {
+    getUsers(async (data) => {
         try {
             const hashedPass = await bcrypt.hash(req.body.password, 10)
-    
+            
             const newUserCredentials = {
-                id: uuidv4(),
                 name: req.body.name,
                 email: req.body.email,
                 password: hashedPass
             }
-    
+            
             if (!data) {
                 console.log("Not existing users in database, adding the first one");
     
-                insertDataToFile("./users.json", newUserCredentials);
+                insertUser(newUserCredentials);
     
                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
     
                 return res.redirect("/login");
             }
-            const usersDataBase = JSON.parse(data)
-            
-            const newUser = usersDataBase.some(user => {
+
+            const newUser = data.some(user => {
                 return user.email === req.body.email
             })
-    
+
             if (newUser) {
                 console.log("This user already exists")
 
                 app.locals.statusMessage = "This user already exists."
     
-                res.redirect("/register");
+                return res.redirect("/register");
             }
             else {
-                insertDataToFile("./users.json", newUserCredentials);
+                insertUser(newUserCredentials);
     
                 console.log("Just added a new user")
     
@@ -136,7 +179,7 @@ app.post("/register", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-    readFile("./users.json", "utf-8", async (data) => {
+    getUsers(async (data) => {
         if (!data) {
             console.log("Data base is empty")
 
@@ -144,9 +187,7 @@ app.post("/login", (req, res) => {
 
             return res.redirect("/login");
         }
-        const usersDataBase = JSON.parse(data);
-        
-        const logingUser = usersDataBase.find(user => {
+        const logingUser = data.find(user => {
             return user.email === req.body.email
         })
 
@@ -176,6 +217,101 @@ app.post("/login", (req, res) => {
         }
     })
 })
+
+// app.post("/register", (req, res) => {
+//     readFile("./users.json", "utf-8", async (data) => {
+//         try {
+//             const hashedPass = await bcrypt.hash(req.body.password, 10)
+    
+//             const newUserCredentials = {
+//                 id: uuidv4(),
+//                 name: req.body.name,
+//                 email: req.body.email,
+//                 password: hashedPass
+//             }
+    
+//             if (!data) {
+//                 console.log("Not existing users in database, adding the first one");
+    
+//                 insertDataToFile("./users.json", newUserCredentials);
+    
+//                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
+    
+//                 return res.redirect("/login");
+//             }
+//             const usersDataBase = JSON.parse(data)
+            
+//             const newUser = usersDataBase.some(user => {
+//                 return user.email === req.body.email
+//             })
+    
+//             if (newUser) {
+//                 console.log("This user already exists")
+
+//                 app.locals.statusMessage = "This user already exists."
+    
+//                 res.redirect("/register");
+//             }
+//             else {
+//                 insertDataToFile("./users.json", newUserCredentials);
+    
+//                 console.log("Just added a new user")
+    
+//                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
+    
+//                 res.redirect("/login");
+//             }
+//         } catch {
+//             console.log("Something went wrong registering you.");
+
+//             app.locals.statusMessage = "Something went wrong, please try again.";
+
+//             res.redirect("/register");
+//         }
+//     })
+// })
+
+// app.post("/login", (req, res) => {
+//     readFile("./users.json", "utf-8", async (data) => {
+//         if (!data) {
+//             console.log("Data base is empty")
+
+//             app.locals.userStatus = "This user doesn't exist. Sign up please!";
+
+//             return res.redirect("/login");
+//         }
+//         const usersDataBase = JSON.parse(data);
+        
+//         const logingUser = usersDataBase.find(user => {
+//             return user.email === req.body.email
+//         })
+
+//         try {
+//             const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password)
+    
+//             if (logingUser && isPasswordMatched) {
+//                 req.session.userId = logingUser.id;
+    
+//                 app.locals.name = logingUser.name;
+    
+//                 res.redirect("/dashboard");
+//             }
+//             else {
+//                 console.log("Wrong credentials")
+
+//                 app.locals.userStatus = "Wrong user name or password.";
+    
+//                 res.redirect("/login")
+//             }
+//         } catch {
+//             console.log("Catched")
+
+//             app.locals.userStatus = "Wrong user name or password.";
+
+//             res.redirect("/login")
+//         }
+//     })
+// })
 
 app.post("/logout", (req, res) => {
     req.session.destroy((err) => {
