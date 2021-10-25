@@ -1,16 +1,10 @@
 const express = require('express');
 const session = require("express-session");
 const app = express();
-
-// require("dotenv").config();
-
-// require('dotenv').config({ silent: process.env.NODE_ENV === 'production' })
-
-// const envirement = process.env.NODE_ENV || "development";
-
+const mysql = require("mysql2");
+const MySqlStore = require("express-mysql-session")(session);
 
 const {
-    NODE_ENV,
     PORT,
     SESSION_SECRET,
     SESSION_NAME,
@@ -23,22 +17,13 @@ const {
 
 const SERVER_PORT = PORT || 4000;
 
-console.log(NODE_ENV)
-
-if (NODE_ENV === "development") {console.log("In develpment")}
-if (NODE_ENV === "production") {console.log("In production")}
-
-
-const mysql = require("mysql2");
 const excel = require("excel4node");
 const fs = require("fs");
-// const encodingConverter = require("iconv-lite"); !!!!DELETE THIS DEPENDENCY AT THE END
 require("pug");
-const { v4: uuidv4 } = require('uuid');
 const bcrypt = require("bcryptjs");
 
-const insertDataToFile = require("./controllers/insertDataToFile");
-const readFile = require("./controllers/readFile");
+// const insertDataToFile = require("./controllers/insertDataToFile");
+// const readFile = require("./controllers/readFile");
 
 app.set("view-engine", "pug");
 
@@ -47,7 +32,7 @@ const dbConfig = {
     user: DATABASE_USER,
     password: DATABASE_PASSWORD,
     database: "sql11446093",
-    port: parseInt(DATABASE_PORT)
+    port: parseInt(DATABASE_PORT),
 }
 
 const db = mysql.createConnection(dbConfig);
@@ -57,6 +42,25 @@ db.connect((err) => {
     
     console.log("My sql connected")
 })
+
+const sessionStoreOptions = {
+    host: DATABASE_HOST,
+    user: DATABASE_USER,
+    password: DATABASE_PASSWORD,
+    database: "sql11446093",
+    port: parseInt(DATABASE_PORT),
+    createDatabaseTable: true,
+    schema: {
+        tableName: "sessions",
+        columnNames: {
+            session_id: "session_id",
+            expires: "expires",
+            data: "data"
+        }
+    }
+}
+
+const sessionStore = new MySqlStore(sessionStoreOptions);
 
 const insertUser = (newUser) => {
     const sql = `INSERT INTO users Set ?`
@@ -89,7 +93,7 @@ app.use(session({
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    // store: Set this option when using real database
+    store: sessionStore,
     cookie: {
         maxAge: parseInt(SESSION_LIFETIME),
         sameSite: true,
@@ -227,6 +231,29 @@ app.post("/login", (req, res) => {
     })
 })
 
+app.post("/logout", (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            res.redirect("/dashboard");
+        }
+    })
+
+    res.clearCookie(SESSION_NAME);
+
+    sessionStore.destroy(SESSION_NAME, (err) => {
+        if (err) console.log("Didn't manage to delete the session")
+
+        console.log("Session deleted")
+    })
+
+    res.redirect("/login");
+})
+
+
+
+
+
+
 // app.post("/register", (req, res) => {
 //     readFile("./users.json", "utf-8", async (data) => {
 //         try {
@@ -322,17 +349,7 @@ app.post("/login", (req, res) => {
 //     })
 // })
 
-app.post("/logout", (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            res.redirect("/dashboard");
-        }
-    })
 
-    res.clearCookie(SESSION_NAME);
-
-    res.redirect("/login");
-})
 
 
 

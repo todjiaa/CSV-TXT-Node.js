@@ -13,16 +13,13 @@
     "bcryptjs": "^2.4.3",
     "excel4node": "^1.7.2",
     "express": "^4.17.1",
+    "express-mysql-session": "^2.1.7",
     "express-session": "^1.17.2",
-    "iconv-lite": "^0.6.3",
     "mysql2": "^2.3.2",
-    "pug": "^3.0.2",
-    "uuid": "^8.3.2"
+    "pug": "^3.0.2"
   },
   "devDependencies": {
     "dotenv": "^10.0.0",
     "nodemon": "^1.19.0"
   }
 }
-
-
