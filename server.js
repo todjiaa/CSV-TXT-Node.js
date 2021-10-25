@@ -50,10 +50,10 @@ const sessionStoreOptions = {
     database: "sql11446093",
     port: parseInt(DATABASE_PORT),
     createDatabaseTable: true,
-    exparation: SESSION_LIFETIME,
+    exparation: parseInt(SESSION_LIFETIME),
     clearExpired: true,
     checkExpirationInterval: parseInt(SESSION_LIFETIME) + 60000,
-    endConnectionOnClose: true,
+    // endConnectionOnClose: true,
     schema: {
         tableName: "sessions",
         columnNames: {
