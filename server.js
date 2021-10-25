@@ -1,10 +1,11 @@
-// import express from "express";
-
 const express = require('express');
 const session = require("express-session");
 const app = express();
 
 // require("dotenv").config();
+
+require('dotenv').config({ silent: process.env.NODE_ENV === 'production' })
+
 
 const {
     PORT,
@@ -18,7 +19,6 @@ const {
 } = process.env
 
 const SERVER_PORT = PORT || 4000;
-// const SESSION_LIFETIME = 1000 * 60 * 60 * 2;
 
 const mysql = require("mysql2");
 const excel = require("excel4node");
