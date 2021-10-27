@@ -1,7 +1,7 @@
 const express = require('express');
 const session = require("express-session");
 const app = express();
-const mysql = require("mysql2");
+const mysql = require("mysql");
 const MySqlStore = require("express-mysql-session")(session);
 
 const {
@@ -27,21 +27,18 @@ const bcrypt = require("bcryptjs");
 
 app.set("view-engine", "pug");
 
-const dbConfig = {
+const dbPoolConfig = {
     host: DATABASE_HOST,
+    // host: "",
     user: DATABASE_USER,
     password: DATABASE_PASSWORD,
     database: "sql11446093",
     port: parseInt(DATABASE_PORT),
+    connectionLimit: 100,
+    // queueLimit: 0
 }
+const dbPool = mysql.createPool(dbPoolConfig)
 
-const db = mysql.createConnection(dbConfig);
-
-db.connect((err) => {
-    if (err) console.log("Didn't manage to connect to database")
-    
-    console.log("My sql connected")
-})
 
 const sessionStoreOptions = {
     host: DATABASE_HOST,
@@ -50,10 +47,9 @@ const sessionStoreOptions = {
     database: "sql11446093",
     port: parseInt(DATABASE_PORT),
     createDatabaseTable: true,
-    exparation: parseInt(SESSION_LIFETIME),
     clearExpired: true,
-    checkExpirationInterval: parseInt(SESSION_LIFETIME) + 60000,
-    // endConnectionOnClose: true,
+    checkExpirationInterval: parseInt(SESSION_LIFETIME),
+    connectionLimit: 100,
     schema: {
         tableName: "sessions",
         columnNames: {
@@ -63,41 +59,61 @@ const sessionStoreOptions = {
         }
     }
 }
-
 const sessionStore = new MySqlStore(sessionStoreOptions);
 
-const insertUser = (newUser) => {
-    const sql = `INSERT INTO users Set ?`
-    
-    db.query(sql, newUser, (err) => {
-        if (err) console.log("There was an error inserting the user in the DB")
-        
-        console.log("User inserted")
+const insertUser = (newUser, callback) => {
+    const sql = `INSERT INTO users Set ?`;
+
+    dbPool.query(sql, newUser, (insertError, result) => {
+        if (insertError) {
+            console.log("There was an error inserting the user in the DB");
+            
+            return callback(insertError);
+        }
+        callback(insertError, result);
     })
 }
 
 const getUsers = (callback) => {
-    const sql = `SELECT * FROM users`
+    const sql = `SELECT * FROM users`;
     
-    db.query(sql, (err, users) => {
-        if (err) console.log("There was an error inserting the user in the DB")
-        
-        console.log("Users retrieved")
+    dbPool.getConnection((connectionError, connection) => {
+        if (connectionError) {
+            console.log("Didn't manage to connect to Data Base", connectionError.code)
+            
+            return callback(connectionError);
+        } 
 
-        callback(users);
+        connection.query(sql, (retrivingError, users) => {
+            if (retrivingError) {
+                console.log("There was an error retriving the users from the DB", retrivingError.code)
+                
+                return callback(connectionError, retrivingError);
+            }
+
+            console.log("Users retrieved")
+            
+            callback(connectionError, retrivingError, users);
+
+            connection.release();
+        })
     })
 }
+
+
 
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
+
 app.use(session({
     name: SESSION_NAME,
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
+    // store: "",
     cookie: {
         maxAge: parseInt(SESSION_LIFETIME),
         sameSite: true,
@@ -141,11 +157,24 @@ app.get("/register", redirectDashboard, (req, res) => {
 })
 
 app.get("/dashboard", redirectLogin, (req, res) => {
+    res.locals.name = req.session.userName;
+
     res.render("dashboard.pug");
 })
 
 app.post("/register", (req, res) => {
-    getUsers(async (data) => {
+    getUsers(async (connectionError, retrivingError, users) => {
+        if (connectionError) {
+            app.locals.statusMessage = "Something went wrong connecting to the Server. Please try to register again."
+
+            return res.redirect("/register");
+        }
+
+        if (retrivingError) {
+            app.locals.userStatus = "Something went wrong. Please try to register again."
+
+            return res.redirect("/register");
+        }
         try {
             const hashedPass = await bcrypt.hash(req.body.password, 10)
             
@@ -155,35 +184,47 @@ app.post("/register", (req, res) => {
                 password: hashedPass
             }
             
-            if (!data) {
+            if (!users) {
                 console.log("Not existing users in database, adding the first one");
     
-                insertUser(newUserCredentials);
-    
+                if (insertError) {
+                    app.locals.statusMessage = "Something went wrong registering you. Please try again."
+
+                    return res.redirect("/register");
+                }
+
+                console.log("New user added succesfully!")
+                
                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
-    
-                return res.redirect("/login");
+                
+                res.redirect("/login");
             }
 
-            const newUser = data.some(user => {
+            const existingUser = users.some(user => {
                 return user.email === req.body.email
             })
 
-            if (newUser) {
+            if (existingUser) {
                 console.log("This user already exists")
 
                 app.locals.statusMessage = "This user already exists."
     
-                return res.redirect("/register");
+                res.redirect("/register");
             }
             else {
-                insertUser(newUserCredentials);
-    
-                console.log("Just added a new user")
-    
-                app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
-    
-                res.redirect("/login");
+                insertUser(newUserCredentials, (insertError) => {
+                    if (insertError) {
+                        app.locals.statusMessage = "Something went wrong registering you. Please try again."
+
+                        return res.redirect("/register");
+                    }
+
+                    console.log("New user added succesfully!")
+                    
+                    app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
+                    
+                    res.redirect("/login");
+                });
             }
         } catch {
             console.log("Something went wrong registering you.");
@@ -196,25 +237,45 @@ app.post("/register", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-    getUsers(async (data) => {
-        if (!data) {
+    getUsers(async (connectionError, retrivingError, users) => {
+        if (connectionError) {
+            app.locals.userStatus = "Something went wrong connecting to the Server. Please try to log in again."
+
+            return res.redirect("/login");
+        }
+
+        if (retrivingError) {
+            app.locals.userStatus = "Something went wrong. Please try to log in again."
+
+            return res.redirect("/login");
+        }
+
+        if (!users) {
             console.log("Data base is empty")
 
             app.locals.userStatus = "This user doesn't exist. Sign up please!";
 
             return res.redirect("/login");
         }
-        const logingUser = data.find(user => {
+        const logingUser = users.find(user => {
             return user.email === req.body.email
         })
 
+        if (!logingUser) {
+            console.log("User doesn't exist")
+
+            app.locals.userStatus = "User doesn't exist. Please register first.";
+
+            return res.redirect("/login")
+        }
+
         try {
-            const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password)
+            const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password);
     
             if (logingUser && isPasswordMatched) {
                 req.session.userId = logingUser.id;
     
-                app.locals.name = logingUser.name;
+                req.session.userName = logingUser.name;
     
                 res.redirect("/dashboard");
             }
@@ -238,7 +299,7 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            res.redirect("/dashboard");
+            return res.redirect("/dashboard");
         }
     })
 
@@ -353,6 +414,28 @@ app.post("/logout", (req, res) => {
 //     })
 // })
 
+
+// const insertUser = (newUser) => {
+//     const sql = `INSERT INTO users Set ?`
+    
+//     dbPool.query(sql, newUser, (err) => {
+//         if (err) console.log("There was an error inserting the user in the DB")
+        
+//         console.log("User inserted")
+//     })
+// }
+
+// const getUsers = (callback) => {
+//     const sql = `SELECT * FROM users`
+    
+//     dbPool.query(sql, (err, users) => {
+//         if (err) console.log("There was an error inserting the user in the DB")
+        
+//         console.log("Users retrieved")
+
+//         callback(users);
+//     })
+// }
 
 
 
