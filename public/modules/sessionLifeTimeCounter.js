@@ -98,7 +98,7 @@ export const sessionLifeTimeCounter = async () => {
     console.log("Total", cookieRemainingTimeInMs + performanceTime)
 
 
-    const timeOut = cookieRemainingTimeInMs - (intervalTime * 1000);
+    const timeOut = cookieRemainingTimeInMs - (intervalTime * 1000 + 1000);
 
     console.log("Time Out", timeOut)
 
