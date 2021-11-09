@@ -21,6 +21,8 @@ export let sessionStatus = {
     completed: false
 };
 
+export const logOutForm = document.querySelector(".header_logout-form");
+
 export const missingInvoicesWrapper = document.querySelector(".missing-invoices-wrapper"); 
 
 export const notificationWrapper = document.querySelector(".notification-wrapper");
@@ -33,4 +35,8 @@ export const downloadWrapper = document.querySelector(".download-wrapper");
 export const downloadForm = downloadWrapper.querySelector(".download-form");
 export const downloadButton = downloadForm.querySelector(".download-button");
 
-// export const registrationName = document.querySelector(".registration-section_name");
+export const sessionWrapper = document.querySelector(".session-wrapper");
+export const sessionWrapperH2 = sessionWrapper.querySelector(".session-wrapper_h2");
+export const sessionWrapperExtendButton = sessionWrapper.querySelector(".session-wrapper_extend-button");
+export const sessionWrapperForm = sessionWrapper.querySelector(".session-wrapper_form");
+

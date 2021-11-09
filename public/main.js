@@ -1,6 +1,6 @@
 import { compareFiles } from "./modules/compareFiles.js";
 import { separateMissingInvoicesByFile } from "./modules/separateMissingInvoicesByFile.js";
-import { showNotification, hideNotification } from "./modules/showHideNotification.js";
+import { hideNotification } from "./modules/showHideNotification.js";
 import { onTxtInputChange, onCsvInputChange } from "./modules/onInputChange.js";
 import { resetSession } from "./modules/resetSession.js";
 import { sortTheData } from "./modules/sortTheData.js";
@@ -16,6 +16,7 @@ import {
     downloadForm,
     downloadButton
 } from "./modules/variablesAndFlags.js";
+import { sessionLifeTimeCounter } from "./modules/sessionLifeTimeCounter.js";
 
 
 // Init the whole algorithm of comparing both csv and txt files
@@ -91,6 +92,18 @@ document.querySelector(".reset-button").addEventListener("click", () => {
 
 // Click event on the "X" span of the notification that triggers the function closing the resetSession notification 
 document.querySelector(".close-notification-wrapper").addEventListener("click", hideNotification);
+
+// Start the counter for the session life time
+window.addEventListener("DOMContentLoaded", sessionLifeTimeCounter);
+
+// sessionLifeTimeCounter()
+
+
+
+
+
+
+
 
 
 

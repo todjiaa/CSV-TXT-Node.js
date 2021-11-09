@@ -22,8 +22,6 @@ const fs = require("fs");
 require("pug");
 const bcrypt = require("bcryptjs");
 
-// const insertDataToFile = require("./controllers/insertDataToFile");
-// const readFile = require("./controllers/readFile");
 
 app.set("view-engine", "pug");
 
@@ -61,7 +59,7 @@ const sessionStoreOptions = {
 }
 const sessionStore = new MySqlStore(sessionStoreOptions);
 
-const insertUser = (newUser, callback) => {
+const insertUserToDB = (newUser, callback) => {
     const sql = `INSERT INTO users Set ?`;
 
     dbPool.query(sql, newUser, (insertError, result) => {
@@ -74,7 +72,7 @@ const insertUser = (newUser, callback) => {
     })
 }
 
-const getUsers = (callback) => {
+const getUsersFromDB = (callback) => {
     const sql = `SELECT * FROM users`;
     
     dbPool.getConnection((connectionError, connection) => {
@@ -101,29 +99,44 @@ const getUsers = (callback) => {
 }
 
 
-
-
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static("public"));
 
+const hour = 3600000
+
+
 app.use(session({
     name: SESSION_NAME,
     secret: SESSION_SECRET,
-    resave: false,
+    resave: false, // It will resave the session in the database store
     saveUninitialized: false,
     store: sessionStore,
-    // store: "",
+    rolling: false, // It will reinitialize the cookie max age on each user action
     cookie: {
         maxAge: parseInt(SESSION_LIFETIME),
         sameSite: true,
-        // secure: true - Set this option only if the website is using https!
+        // secure: true - This option will set a cookie only if the website is using https!
     }
-}))
+}), (req, res, next) => {
+    if(req.path === "/dashboard") {
+        // req.session.cookie.maxAge = parseInt(SESSION_LIFETIME)
+
+        // req.session.test = Date.now()
+
+
+        // console.log("in middleWare age", req.session.cookie.maxAge)
+        
+        // console.log("in middleWare path", req.path)
+        
+    }
+    next()
+})
+
 
 
 const redirectLogin = (req, res, next) => {
-    if (!req.session.userId) {
+    if (!req.session.userId) {        
         res.redirect("/login");
     } else {
         next()
@@ -131,7 +144,7 @@ const redirectLogin = (req, res, next) => {
 }
 
 const redirectDashboard = (req, res, next) => {
-    if (req.session.userId) {
+    if (req.session && req.session.userId) {
         res.redirect("/dashboard");
     } else {
         next()
@@ -143,35 +156,87 @@ app.get("/", redirectDashboard, (req, res) => {
 })
 
 app.get("/login", redirectDashboard, (req, res) => {
+
+    // console.log("in login", req.session.cookie.maxAge)
+
     res.render("login.pug");
 
-    app.locals.succesfullRegistration = "";
-    app.locals.statusMessage = "";
-    app.locals.userStatus = "";
+    // app.locals.succesfullRegistration = "";
+    // app.locals.statusMessage = "";
+    // app.locals.userStatus = "";
+    app.locals.loginStatusMessage = "";
+    app.locals.registrationStatusMessage = "";
 })
 
 app.get("/register", redirectDashboard, (req, res) => {
     res.render("register.pug");
 
-    app.locals.statusMessage = "";
+    app.locals.registrationStatusMessage = "";
 })
+
 
 app.get("/dashboard", redirectLogin, (req, res) => {
+    
     res.locals.name = req.session.userName;
+    
+    // req.session.cookie.maxAge = parseInt(SESSION_LIFETIME)
 
+    // req.session.test = Date.now()
+    
     res.render("dashboard.pug");
+    
 })
 
+app.post("/sessionExpireTime", (req, res) => {
+
+    req.session.cookie.maxAge = parseInt(SESSION_LIFETIME)
+
+    req.session.test = Date.now()
+    
+    const cookieRemainingTimeInMs = req.session.cookie.maxAge;
+    const serverTimeNowInMs = Date.now();
+
+
+    console.log("in fetch", serverTimeNowInMs - req.session.test)
+
+    console.log("in fetch session remaining time", cookieRemainingTimeInMs)
+
+    // console.log("in fetch", serverTimeNowInMs - cookieOriginalMaxAge)
+
+    // const cookieExparationDateInMs = serverTimeNowInMs + cookieRemainingTimeInMs;
+
+
+    // console.log(sessionStartTime)
+
+    const obj = {
+        // sessionStartTime: req.session.sessionStartTime,
+        sessionStartTime: req.session.test,
+        // sessionStartTime: serverTimeNowInMs,
+
+        cookieRemainingTimeInMs: cookieRemainingTimeInMs,
+    }
+
+    // console.log(req.session.cookie.maxAge)
+    // const expireHostLocalTime = new Date(cookieExparationDateInMs).toString();
+
+    // res.send(JSON.stringify(expireHostLocalTime))
+    // res.send(JSON.stringify(cookieExparationDateInMs))
+    res.send(JSON.stringify(obj))
+
+
+})
+
+
 app.post("/register", (req, res) => {
-    getUsers(async (connectionError, retrivingError, users) => {
+    getUsersFromDB(async (connectionError, retrivingError, users) => {
         if (connectionError) {
-            app.locals.statusMessage = "Something went wrong connecting to the Server. Please try to register again."
+            app.locals.registrationStatusMessage = "Something went wrong connecting to the Server. Please try to register again."
 
             return res.redirect("/register");
         }
 
         if (retrivingError) {
-            app.locals.userStatus = "Something went wrong. Please try to register again."
+            app.locals.registrationStatusMessage = "Something went wrong. Please try to register again."
 
             return res.redirect("/register");
         }
@@ -188,14 +253,14 @@ app.post("/register", (req, res) => {
                 console.log("Not existing users in database, adding the first one");
     
                 if (insertError) {
-                    app.locals.statusMessage = "Something went wrong registering you. Please try again."
+                    app.locals.registrationStatusMessage = "Something went wrong registering you. Please try again."
 
                     return res.redirect("/register");
                 }
 
                 console.log("New user added succesfully!")
                 
-                app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
+                app.locals.loginStatusMessage = "You have registered succesfully! Please Log in.";
                 
                 res.redirect("/login");
             }
@@ -207,21 +272,21 @@ app.post("/register", (req, res) => {
             if (existingUser) {
                 console.log("This user already exists")
 
-                app.locals.statusMessage = "This user already exists."
+                app.locals.registrationStatusMessage = "This user already exists."
     
                 res.redirect("/register");
             }
             else {
-                insertUser(newUserCredentials, (insertError) => {
+                insertUserToDB(newUserCredentials, (insertError) => {
                     if (insertError) {
-                        app.locals.statusMessage = "Something went wrong registering you. Please try again."
+                        app.locals.registrationStatusMessage = "Something went wrong registering you. Please try again."
 
                         return res.redirect("/register");
                     }
 
                     console.log("New user added succesfully!")
                     
-                    app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
+                    app.locals.loginStatusMessage = "You have registered succesfully! Please Log in.";
                     
                     res.redirect("/login");
                 });
@@ -229,7 +294,7 @@ app.post("/register", (req, res) => {
         } catch {
             console.log("Something went wrong registering you.");
 
-            app.locals.statusMessage = "Something went wrong, please try again.";
+            app.locals.registrationStatusMessage = "Something went wrong, please try again.";
 
             res.redirect("/register");
         }
@@ -237,15 +302,15 @@ app.post("/register", (req, res) => {
 })
 
 app.post("/login", (req, res) => {
-    getUsers(async (connectionError, retrivingError, users) => {
+    getUsersFromDB(async (connectionError, retrivingError, users) => {
         if (connectionError) {
-            app.locals.userStatus = "Something went wrong connecting to the Server. Please try to log in again."
+            app.locals.loginStatusMessage = "Something went wrong connecting to the Server. Please try to log in again."
 
             return res.redirect("/login");
         }
 
         if (retrivingError) {
-            app.locals.userStatus = "Something went wrong. Please try to log in again."
+            app.locals.loginStatusMessage = "Something went wrong. Please try to log in again."
 
             return res.redirect("/login");
         }
@@ -253,7 +318,7 @@ app.post("/login", (req, res) => {
         if (!users) {
             console.log("Data base is empty")
 
-            app.locals.userStatus = "This user doesn't exist. Sign up please!";
+            app.locals.loginStatusMessage = "This user doesn't exist. Sign up please!";
 
             return res.redirect("/login");
         }
@@ -264,7 +329,7 @@ app.post("/login", (req, res) => {
         if (!logingUser) {
             console.log("User doesn't exist")
 
-            app.locals.userStatus = "User doesn't exist. Please register first.";
+            app.locals.loginStatusMessage = "User doesn't exist. Please register first.";
 
             return res.redirect("/login")
         }
@@ -282,14 +347,14 @@ app.post("/login", (req, res) => {
             else {
                 console.log("Wrong credentials")
 
-                app.locals.userStatus = "Wrong user name or password.";
+                app.locals.loginStatusMessage = "Wrong user name or password.";
     
                 res.redirect("/login")
             }
         } catch {
             console.log("Catched")
 
-            app.locals.userStatus = "Wrong user name or password.";
+            app.locals.loginStatusMessage = "Wrong user name or password.";
 
             res.redirect("/login")
         }
@@ -297,10 +362,19 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
+    
+    console.log("Cookie time left in log out", req.session.cookie.maxAge)
+    
+    if (req.session.cookie.maxAge < 7000) {
+        app.locals.loginStatusMessage = "Your session has expired. Please log in again."
+    }
+
     req.session.destroy((err) => {
         if (err) {
             return res.redirect("/dashboard");
         }
+        
+        console.log("Session deleted");
     })
 
     res.clearCookie(SESSION_NAME);
@@ -308,8 +382,10 @@ app.post("/logout", (req, res) => {
     sessionStore.destroy(SESSION_NAME, (err) => {
         if (err) console.log("Didn't manage to delete the session");
         
-        console.log("Session deleted");
+        console.log("Session Store deleted");
     })
+
+
 
     res.redirect("/login");
 })
@@ -319,123 +395,6 @@ app.post("/logout", (req, res) => {
 
 
 
-// app.post("/register", (req, res) => {
-//     readFile("./users.json", "utf-8", async (data) => {
-//         try {
-//             const hashedPass = await bcrypt.hash(req.body.password, 10)
-    
-//             const newUserCredentials = {
-//                 id: uuidv4(),
-//                 name: req.body.name,
-//                 email: req.body.email,
-//                 password: hashedPass
-//             }
-    
-//             if (!data) {
-//                 console.log("Not existing users in database, adding the first one");
-    
-//                 insertDataToFile("./users.json", newUserCredentials);
-    
-//                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
-    
-//                 return res.redirect("/login");
-//             }
-//             const usersDataBase = JSON.parse(data)
-            
-//             const newUser = usersDataBase.some(user => {
-//                 return user.email === req.body.email
-//             })
-    
-//             if (newUser) {
-//                 console.log("This user already exists")
-
-//                 app.locals.statusMessage = "This user already exists."
-    
-//                 res.redirect("/register");
-//             }
-//             else {
-//                 insertDataToFile("./users.json", newUserCredentials);
-    
-//                 console.log("Just added a new user")
-    
-//                 app.locals.succesfullRegistration = "You have registered succesfully! Please Log in.";
-    
-//                 res.redirect("/login");
-//             }
-//         } catch {
-//             console.log("Something went wrong registering you.");
-
-//             app.locals.statusMessage = "Something went wrong, please try again.";
-
-//             res.redirect("/register");
-//         }
-//     })
-// })
-
-// app.post("/login", (req, res) => {
-//     readFile("./users.json", "utf-8", async (data) => {
-//         if (!data) {
-//             console.log("Data base is empty")
-
-//             app.locals.userStatus = "This user doesn't exist. Sign up please!";
-
-//             return res.redirect("/login");
-//         }
-//         const usersDataBase = JSON.parse(data);
-        
-//         const logingUser = usersDataBase.find(user => {
-//             return user.email === req.body.email
-//         })
-
-//         try {
-//             const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password)
-    
-//             if (logingUser && isPasswordMatched) {
-//                 req.session.userId = logingUser.id;
-    
-//                 app.locals.name = logingUser.name;
-    
-//                 res.redirect("/dashboard");
-//             }
-//             else {
-//                 console.log("Wrong credentials")
-
-//                 app.locals.userStatus = "Wrong user name or password.";
-    
-//                 res.redirect("/login")
-//             }
-//         } catch {
-//             console.log("Catched")
-
-//             app.locals.userStatus = "Wrong user name or password.";
-
-//             res.redirect("/login")
-//         }
-//     })
-// })
-
-
-// const insertUser = (newUser) => {
-//     const sql = `INSERT INTO users Set ?`
-    
-//     dbPool.query(sql, newUser, (err) => {
-//         if (err) console.log("There was an error inserting the user in the DB")
-        
-//         console.log("User inserted")
-//     })
-// }
-
-// const getUsers = (callback) => {
-//     const sql = `SELECT * FROM users`
-    
-//     dbPool.query(sql, (err, users) => {
-//         if (err) console.log("There was an error inserting the user in the DB")
-        
-//         console.log("Users retrieved")
-
-//         callback(users);
-//     })
-// }
 
 
 

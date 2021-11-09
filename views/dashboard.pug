@@ -13,7 +13,7 @@ html
             //- h2 Hello #{name}
             if name 
                 h2 Hello #{name}
-            form(action="logout", method="post")
+            form.header_logout-form(action="logout", method="post")
                 button.header_logout Log out
         //- Inputs Container 
         div.inputs-container
@@ -54,5 +54,8 @@ html
         div.download-wrapper
             form.download-form(action="/downloadCsvFile" method="POST")
                 button.download-button(type="button") Download File
+        div.session-wrapper
+            h2.session-wrapper_h2
+            button.session-wrapper_extend-button Extend Session
         //- JS Main module
         script(src="main.js" type="module")

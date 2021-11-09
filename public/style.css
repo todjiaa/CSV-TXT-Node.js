@@ -248,6 +248,30 @@ body {
     background-color: rgb(231, 231, 231);
 }
 
+.session-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.829);
+}
+
+.session-wrapper h2 {
+    color: white;
+    font-weight: 100;
+    letter-spacing: 1.5px;
+}
+
+.session-wrapper_extend-button {
+    display: none;
+    padding: 5px;
+}
+
 .show-flex {
     display: flex;
 }

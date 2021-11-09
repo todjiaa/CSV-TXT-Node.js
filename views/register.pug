@@ -8,7 +8,7 @@ html
     body
         section.registration-section 
             //- - const notification = `${flashNotification ? flashNotification : ""}`
-            p.registration-section_notification #{statusMessage}
+            p.registration-section_notification #{registrationStatusMessage}
             form(action="register" method="POST") 
                 input.registration-section_name(name="name" type="text" placeholder="Name" required)
                 input.registration-section_email(name="email" type="email" placeholder="Email" required)

@@ -7,8 +7,8 @@ html
         title Login page
     body 
         section.login-section 
-            - const flashNotification = `${userStatus ? userStatus : succesfullRegistration ? succesfullRegistration : ""}`
-            p.login-section_notification #{flashNotification}
+            //- - const flashNotification = `${userStatus ? userStatus : succesfullRegistration ? succesfullRegistration : ""}`
+            p.login-section_notification #{loginStatusMessage}
             form.login-section_form(action="/login" method="POST")
                 input.login-section_email(name="email" type="email" placeholder="Email" required)
                 input.login-section_password(name="password", type="password" placeholder="Password" required)
