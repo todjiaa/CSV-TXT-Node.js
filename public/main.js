@@ -49,7 +49,7 @@ const compareFilesInit = () => {
             downloadFile(resultObject);
         }, { once: true });
     }
-}
+} 
 
 
 const downloadFile = (resultObject) => {

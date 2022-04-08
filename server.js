@@ -377,12 +377,16 @@ const createFileName = () => {
     excelFileName = `Results-${day}_${month}_${year}_${Date.now()}.xlsx`;
 }
 
+const createWorksheetName = (workBook, obj) => {
+    return [workBook.addWorksheet(`${obj.category} в ${obj.fileName}`)] 
+}
+
 const extractData = (data, workBook, style) => {
     data.forEach(file => {
         file.forEach(obj => {
             if (obj.invoices.length === 0) return
 
-            const workSheetName = workBook.addWorksheet(`Missing Invoices in ${obj.fileName}`);
+            const [workSheetName] = createWorksheetName(workBook, obj)
 
             obj.invoices.forEach((rowData, rowIndex) => {
                 rowData.forEach((cellData, cellIndex) => {
@@ -425,7 +429,7 @@ const downloadExcelFile = (req, res) => {
     const excelFilePath = `${excelFileName}`;
 
     res.download(excelFilePath, (err) => {
-        if (err) console.log("Wasn't anble to download the file in res.donwload in /downloadExcelFile route")
+        if (err) console.log("Wasn't able to download the file in res.donwload in /downloadExcelFile route")
 
         console.log("File was downloaded")
 
