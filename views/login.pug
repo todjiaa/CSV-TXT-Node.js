@@ -4,14 +4,24 @@ html
         meta(charset="UTF-8")
         meta(http-equiv="X-UA-Compatible" content="IE=edge")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        link(rel="stylesheet" href="style.css")
         title Login page
-    body 
+    body
+        //- LOGIN SECTION
         section.login-section 
-            //- - const flashNotification = `${userStatus ? userStatus : succesfullRegistration ? succesfullRegistration : ""}`
-            p.login-section_notification #{loginStatusMessage}
-            form.login-section_form(action="/login" method="POST")
-                input.login-section_email(name="email" type="email" placeholder="Email" required)
-                input.login-section_password(name="password", type="password" placeholder="Password" required)
-                button.login-section_submit(type="submit") Sign in
-        p Don't have an account, please 
-            a(href="/register") Sign up
+            //- LOGO CONTAINER
+            div.login-section__logo-container
+                img.login-section__logo(src="logo/logo_transparent.png", alt="logo")
+            //- NOTIFICATION CONTAINER
+            div.login-section__notification-container
+                p.login-section__notification #{loginNotification}
+            //- LOGIN FORM
+            div.login-section__form-container
+                form.login-section__form(action="/login" method="POST")
+                    input.login-section__email(name="email" type="email" placeholder="Email" required)
+                    input.login-section__password(name="password", type="password" placeholder="Password" required)
+                    button.login-section__login-button(type="submit") Login
+            //- REGISTER LINK CONTAINER
+            div.login-section__register-container
+                p.login-section__register-text Don't have an account ? 
+                a.login-section__register-link(href="/register") Register here

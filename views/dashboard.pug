@@ -7,55 +7,64 @@ html
         link(rel="stylesheet" href="style.css")
         title Home page 
     body 
-        //- Header
-        div.header
-            h1 Find Missing Invoices in CSV
-            //- h2 Hello #{name}
-            if name 
-                h2 Hello #{name}
-            form.header_logout-form(action="logout", method="post")
-                button.header_logout Log out
-        //- Inputs Container 
-        div.inputs-container
-            //- Txt file names list
-            div.txt-list-container
-                h3 Txt List:
-                div.txt-list-wrapper
-                    ul.txt-ul
-            //- Inputs wrapper
-            div.inputs-wrapper
-                //- Txt files input section
-                div.txt-section
-                    label(class="txt-label label" for="txt-input") Upload TXT File:
-                    input(class="txt-input input" id="txt-input" type="file" accept=".txt" multiple)
-                //- Csv files input section
-                div.csv-section
-                    label(class="csv-label label" for="csv-input") Upload CSV File:
-                    input(class="csv-input input" id="csv-input" type="file" accept=".csv" multiple)
-            //- Csv file names list
-            div.csv-list-container
-                h3 Csv List:
-                div.csv-list-wrapper
-                    ul.csv-ul
-        //- Find and Reset buttons wrapper
-        div.find-reset-buttons-wrapper
-            button.find-missing-button Find Missing
-            button.reset-button Reset 
-        //- Missing invoices results wrapper
-        div.missing-invoices-wrapper
-            //- Loading Gif wrapper
-            div.loading-gif-wrapper
-                img.loading-gif(src="/loading_gif/loading.gif" alt="Loading")
-        //- Notification when the user is required to reset the session
-        div.notification-wrapper
-            div.close-notification-wrapper
-                span.close-notification x
-            p.notification-text(data-reset data-loaded)
-        div.download-wrapper
-            form.download-form(action="/downloadCsvFile" method="POST")
-                button.download-button(type="button") Download File
-        div.session-wrapper
-            h2.session-wrapper_h2
-            button.session-wrapper_extend-button Extend Session
-        //- JS Main module
+        //- WRAPPER FOR THE WHOLE CONTENT EXCLUDING THE FOOTER
+        div.content-wrapper
+            //- HEADER
+            div.header
+                div.header__logo-container 
+                    img.header__logo(src="logo/logo_transparent.png", alt="logo")
+                div.header__title-container
+                    h1.header__title Just Compare
+                    if name 
+                        h2.header__user-name Hello #{name} 
+                div.header__menu-container 
+                    form.header__logout-form(action="logout", method="post")
+                        button.header__logout-button Log out
+            //- INPUTS SECTION
+            div.inputs-section
+                //- Txt file names list container
+                div.inputs-section__txt-list-container
+                    h3.inputs-section__txt-list-title Txt List
+                    p.inputs-section__txt-list-description Empty
+                    div.inputs-section__txt-list-wrapper
+                        ul.inputs-section__txt-ul
+                //- Inputs container
+                div.inputs-section__inputs-container
+                    //- Txt files input section
+                    div.inputs-section__txt-input-section
+                        input(class="inputs-section__txt-input" id="txt-input" type="file" accept=".txt" multiple)
+                        label(class="inputs-section__txt-label" for="txt-input") Upload TXT File
+                    //- Csv files input section
+                    div.inputs-section__csv-input-section
+                        input(class="inputs-section__csv-input" id="csv-input" type="file" accept=".csv" multiple)
+                        label(class="inputs-section__csv-label" for="csv-input") Upload CSV File
+                //- Csv file names list container
+                div.inputs-section__csv-list-container
+                    h3.inputs-section__csv-list-title Csv List
+                    p.inputs-section__csv-list-description Empty
+                    div.inputs-section__csv-list-wrapper
+                        ul.inputs-section__csv-ul
+            //- EXECUTION BUTTONS (COMPARE/RESET) SECTION
+            div.execution-section
+                button.execution-section__compare-button Compare
+                button.execution-section__reset-button Reset 
+            //- TABLE SECTION CONTAINING THE RESULTS OF THE COMPARISON
+            div.table-section
+            //- NOTIFICATION PLACEHOLDER THAT WILL CONTAIN ALL THE MESSAGES GENERATED DYNAMICALLY BASED ON THE USER INTERACTIONS IN THE SESSION 
+            div.notification-placeholder
+            //- DOWNLOAD BUTTON SECTION WHICH IS HIDDEN BY DEFAULT AND ONLY SHOWS WHEN RESULTS ARE GENERATED
+            div.download-section.hidden
+                form.download-section__form(action="/downloadExcelFile" method="POST")
+                    button.download-section__button(type="button") Download File
+        //- FOOTER SECTION
+        div.footer-section
+            //- Contacts
+            div.footer-section__contacts-container
+                p.footer-section__email For contacts, please email us at: 
+                    a.footer-section__email-link(href="mailto:example@something.com" target="_blank") example@something.com
+            //- Developer
+            div.footer-section__developer-container 
+                p.footer-section__developer-name Powered by 
+                    a.footer-section__developer-name-link(href="http://www.todjiaa.com/" target="_blank") todjiaa
+        //- JAVA SCRIPT SOURCE ADDRESS
         script(src="main.js" type="module")

@@ -1,175 +1,92 @@
 import { compareFiles } from "./modules/compareFiles.js";
-import { separateMissingInvoicesByFile } from "./modules/separateMissingInvoicesByFile.js";
-import { hideNotification } from "./modules/showHideNotification.js";
 import { onTxtInputChange, onCsvInputChange } from "./modules/onInputChange.js";
 import { resetSession } from "./modules/resetSession.js";
-import { sortTheData } from "./modules/sortTheData.js";
+import { initTheTables } from "./modules/initTheTables.js";
+import { addRemoveClass } from "./modules/addRemoveClass.js";
 import {
-    loadingGifWrapper,
     txtFileInput,
     csvFileInput, 
-    sessionStatus, 
+    sessionStatus,
+    comparisonStatus, 
     txtUl, 
     csvUl, 
     files,
-    downloadWrapper,
+    compareButton,
     downloadForm,
+    downloadSection,
     downloadButton
 } from "./modules/variablesAndFlags.js";
-import { sessionLifeTimeCounter } from "./modules/sessionLifeTimeCounter.js";
 
-
-// Init the whole algorithm of comparing both csv and txt files
-const findMissingInvoicesInCsvFile = () => {
+// Init the algorithm of comparing both csv and txt files
+const compareFilesInit = () => {
     if (!sessionStatus.completed && txtUl.childElementCount !== 0 && csvUl.childElementCount !== 0) {
-        loadingGifWrapper.classList.add("show-block");
-
-        const txtArray = [].concat.apply([], files.txtFilesArray);
-        const csvArray = [].concat.apply([], files.csvFilesArray);
-
-        const [missingInvoices, wrongVatNumberInvoices] = compareFiles(csvArray, txtArray);
-
-        const [filesArray] = separateMissingInvoicesByFile(missingInvoices);
-
-        const [sortedData] = sortTheData(filesArray, wrongVatNumberInvoices);       
+        comparisonStatus.started = true;
         
-        downloadWrapper.classList.add("show-flex");
+        // Add a loading gif inside the compare button while the files are getting compared and ready 
+        addRemoveClass(compareButton, "add", "loading-gif");
+        // Add a class which makes the compare button looking like disabled after it's been clicked
+        addRemoveClass(compareButton, "add", "disabled");
+        // Disable the comapre button after it's been clicked
+        compareButton.disabled = true;
         
-        loadingGifWrapper.classList.remove("show-block");
+        // Call the function that compares the csv and txt files 
+        const resultObject = compareFiles(files.csvFilesArray, files.txtFilesArray);
         
+        // Call the function that creates the tables with the results after comparison 
+        initTheTables(resultObject);  
+
+        // Remove the loading gif after tables are ready
+        addRemoveClass(compareButton, "remove", "loading-gif");
+        
+        // Remove class hidden from downlad section element so you can show the download button after tables are ready
+        addRemoveClass(downloadSection, "remove", "hidden");
+
+        // Set the session as completed
         sessionStatus.completed = true;
 
-        downloadButton.addEventListener("click", function handler() {
-            createFile(sortedData, wrongVatNumberInvoices);
-
-            downloadButton.removeEventListener("click", handler);
-        });
+        // Click event on the download button that calls the function creating and downloading an excel file
+        downloadButton.addEventListener("click", () => {
+            downloadFile(resultObject);
+        }, { once: true });
     }
 }
 
 
-const createFile = (sortedData, wrongVatNumberInvoices) => {
-    const concatenatedData = [].concat.apply([], sortedData);
+const downloadFile = (resultObject) => {
 
-    const data = {
-        concatenatedData: concatenatedData,
-        wrongVatNumberInvoices: wrongVatNumberInvoices,
-    }
+    downloadButton.disabled = true;
+    addRemoveClass(downloadButton, "add", "disabled");
+    addRemoveClass(downloadButton, "add", "loading-gif");
+
 
     const optionsCsvFile = {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(resultObject)
     }
     
-    fetch("/createCsvFile", optionsCsvFile)
+    fetch("/createExcelFile", optionsCsvFile)
     .then(res => {
         if (res.status === 200) {
-            downloadForm.submit()
+            downloadForm.submit();
 
-            downloadButton.disabled = true;
+            addRemoveClass(downloadButton, "remove", "loading-gif");
         }
     });
 }
-
-
 
 // On change event listener on the txt and csv inputs
 txtFileInput.addEventListener("change", onTxtInputChange);
 csvFileInput.addEventListener("change", onCsvInputChange);
 
-// Click event on the "find missing" button that triggers the main function initializing everything 
-document.querySelector(".find-missing-button").addEventListener("click", () => {
-    findMissingInvoicesInCsvFile();
+// Click event on the "compare" button 
+compareButton.addEventListener("click", () => {
+    compareFilesInit();
 });
 
-// Click event on the "resetSession" button that triggers the resetSession session function
-document.querySelector(".reset-button").addEventListener("click", () => {
+// Click event on the "resetSession" button that triggers the resetSession function
+document.querySelector(".execution-section__reset-button").addEventListener("click", () => {
     resetSession();
 });
-
-// Click event on the "X" span of the notification that triggers the function closing the resetSession notification 
-document.querySelector(".close-notification-wrapper").addEventListener("click", hideNotification);
-
-// Start the counter for the session life time
-window.addEventListener("DOMContentLoaded", sessionLifeTimeCounter);
-
-// sessionLifeTimeCounter()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// !!!!! CODE THAT MIGHT BE USEFUL
-
-
-// const xml = new XMLHttpRequest();
-
-// const optionsGetCsvFile = {
-//     method: "POST",
-//     // mode: 'no-cors', // no-cors, *cors, same-origin,
-//     // headers: {
-//     //     'Content-Type': 'multipart/form-data',
-//     // },
-//     // body: JSON.stringify(final)
-// }
-
-// const getCsvFile = () => {
-//     // fetch("/getCsvFile", optionsGetCsvFile)
-//     // // .then(response => response.json())
-//     // // .then(data => data.text())
-
-//     // .then(result => console.log(result))
-
-//     // $.ajax({
-//     //     url: '/getCsvFile',
-//     //     type: 'POST',
-//     //     success: function() {
-//     //         window.location = 'download.php';
-//     //     }
-//     // });
-
-// }
-
-
-
-
-// const toma = {
-//     name: "Toma",
-//     age: 36,
-//     designation: "Sound-engineer"
-// }
-
-// const dimana = {
-//     name: "Dimana",
-//     age: 37,
-//     designation: "Artist"
-// }
-
-
-// const optionsUsers = {
-//     method: "POST",
-//     // mode: 'no-cors', // no-cors, *cors, same-origin,
-//     headers: {
-//         'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify(toma)
-// }
-
-// const responseUsers = fetch("/users", optionsUsers)
-// .then(response => response.json())
-// .then(data => console.log(data))
-
-// console.log(responseUsers)

@@ -4,15 +4,26 @@ html
         meta(charset="UTF-8")
         meta(http-equiv="X-UA-Compatible" content="IE=edge")
         meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        link(rel="stylesheet" href="style.css")
         title Registration page
     body
         section.registration-section 
-            //- - const notification = `${flashNotification ? flashNotification : ""}`
-            p.registration-section_notification #{registrationStatusMessage}
-            form(action="register" method="POST") 
-                input.registration-section_name(name="name" type="text" placeholder="Name" required)
-                input.registration-section_email(name="email" type="email" placeholder="Email" required)
-                input.registration-section_password(name="password" type="password" placeholder="Password" required)
-                button.registration-section_submit(type="submit") Sign up
-        p Go to 
-            a(href="login") Login
+            //- LOGO CONTAINER
+            div.registration-section__logo-container 
+                img.registration-section__logo(src="logo/logo_transparent.png", alt="logo")
+            //- NOTIFICATION CONTAINER
+            div.registration-section__notification-container
+                p.registration-section__notification #{registrationNotification}
+            //- REGISTRATION FORM
+            div.registration-section__form-container
+                form.registration-section__form(action="register" method="POST") 
+                    input.registration-section__name(name="name" type="text" placeholder="Name" required)
+                    input.registration-section__email(name="email" type="email" placeholder="Email" required)
+                    input.registration-section__password(name="password" type="password" placeholder="Password" required)
+                    button.registration-section__registration-button(type="submit") Register
+            //- LOGIN LINK CONTAINER
+            div.registration-section__login-container
+                p.registration-section__login-text-one Already have an account ? 
+                div.registration-section__login-link-wrapper 
+                    p.registration-section__login-text-two Go to 
+                    a.registration-section__login-link(href="login") Login
