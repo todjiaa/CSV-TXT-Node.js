@@ -701,6 +701,10 @@ body {
     cursor: inherit;
 }
 
+.disabled:active {
+    background-color: rgb(157, 202, 177);
+}
+
 .loading-gif {
     transition: none;
     background: url("loading_gif/loading.gif") no-repeat; 
