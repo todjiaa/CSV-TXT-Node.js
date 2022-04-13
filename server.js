@@ -1,9 +1,23 @@
+// LIBRARIES 
 const express = require('express');
 const session = require("express-session");
-const app = express();
 const mysql = require("mysql");
 const MySqlStore = require("express-mysql-session")(session);
+const excel = require("excel4node");
+const fs = require("fs");
+require("pug");
 
+// CONTROLERS 
+const notificationInit = require('./controllers/notificationInit');
+const register = require('./controllers/loginAndRegistration/register');
+const login = require('./controllers/loginAndRegistration/login');
+const logOut = require("./controllers/loginAndRegistration/logOut");
+
+// MIDDLEWARE
+const redirectLogin = require('./controllers/loginAndRegistration/middleWare/redirectLogin');
+const redirectDashboard = require('./controllers/loginAndRegistration/middleWare/redirectDashboard');
+
+// ENVIREMENT VARIABLES
 const {
     PORT,
     SESSION_SECRET,
@@ -15,19 +29,16 @@ const {
     DATABASE_PASSWORD,
 } = process.env
 
+// APP INITIAL SET UP
+const app = express();
+app.set("view-engine", "pug");
+app.use(express.json())
+app.use(express.urlencoded({extended: false}))
+app.use(express.static("public"));
 const SERVER_PORT = PORT || 4000;
 
-const excel = require("excel4node");
-const fs = require("fs");
-require("pug");
-const bcrypt = require("bcryptjs");
-const logOut = require("./controllers/logOut");
-const loginNotification = require("./controllers/loginNotification");
-const registrationNotification = require("./controllers/registrationNotification");
 
-
-app.set("view-engine", "pug");
-
+// CONFIGURE DATA BASE POOL
 const dbPoolConfig = {
     host: DATABASE_HOST,
     // host: "",
@@ -39,8 +50,10 @@ const dbPoolConfig = {
     connectionLimit: 100,
     // queueLimit: 0
 }
-const dbPool = mysql.createPool(dbPoolConfig)
+// INIT DATA BASE POOL
+const dbPool = mysql.createPool(dbPoolConfig);
 
+// SESSION STORE OPTIONS
 const sessionStoreOptions = {
     host: DATABASE_HOST,
     user: DATABASE_USER,
@@ -61,52 +74,10 @@ const sessionStoreOptions = {
     }
 }
 
+// INIT SESSION STORE 
 const sessionStore = new MySqlStore(sessionStoreOptions);
 
-const insertUserToDB = (newUser, callback) => {
-    const sql = `INSERT INTO users Set ?`;
-
-    dbPool.query(sql, newUser, (insertError, result) => {
-        if (insertError) {
-            console.log("There was an error inserting the user in the DB");
-            
-            return callback(insertError);
-        }
-        callback(insertError, result);
-    })
-}
-
-const getUsersFromDB = (callback) => {
-    const sql = `SELECT * FROM users`;
-
-    dbPool.getConnection((connectionError, connection) => {
-        if (connectionError) {
-            console.log("Didn't manage to connect to Data Base", connectionError.code)
-            
-            return callback(connectionError);
-        } 
-
-        connection.query(sql, (retrivingError, users) => {
-            if (retrivingError) {
-                console.log("There was an error retriving the users from the DB", retrivingError.code)
-                
-                return callback(connectionError, retrivingError);
-            }
-
-            console.log("Users retrieved")
-            
-            callback(connectionError, retrivingError, users);
-
-            connection.release();
-        })
-    })
-}
-
-app.use(express.json())
-app.use(express.urlencoded({extended: false}))
-app.use(express.static("public"));
-
-
+// CREATE SESSION ON FIRST RESPONSE 
 app.use(session({
     name: SESSION_NAME,
     secret: SESSION_SECRET,
@@ -122,22 +93,10 @@ app.use(session({
     }
 }))
 
-const redirectLogin = (req, res, next) => {
-    if (!req.session.userId) {        
-        res.redirect("/login");
-    } else {
-        next()
-    }
-}
 
-const redirectDashboard = (req, res, next) => {
-    if (req.session && req.session.userId) {
-        res.redirect("/dashboard");
-    } else {
-        next()
-    }
-}
 
+
+// GET REQUESTS
 app.get("/", redirectDashboard, (req, res) => {
     res.redirect("/login");
 })
@@ -145,14 +104,14 @@ app.get("/", redirectDashboard, (req, res) => {
 app.get("/login", redirectDashboard, (req, res) => {
     res.render("login.pug");
 
-    loginNotification(app, "");
-    registrationNotification(app, "");
+    notificationInit(app, "loginNotification", "");
+    // notificationInit(app, "registrationNotification", "");
 })
 
 app.get("/register", redirectDashboard, (req, res) => {
     res.render("register.pug");
 
-    registrationNotification(app, "");
+    notificationInit(app, "registrationNotification", "");
 })
 
 app.get("/dashboard", redirectLogin, (req, res) => {
@@ -162,142 +121,17 @@ app.get("/dashboard", redirectLogin, (req, res) => {
 })
 
 
-
+// POST REQUESTS
 app.post("/register", (req, res) => {
-    getUsersFromDB(async (connectionError, retrivingError, users) => {
-        if (connectionError) {
-            registrationNotification(app, "Something went wrong connecting to the Server. Please try to register again.")
-
-            return res.redirect("/register");
-        }
-
-        if (retrivingError) {
-            registrationNotification(app, "Something went wrong. Please try to register again.")
-
-            return res.redirect("/register");
-        }
-        try {
-            const hashedPass = await bcrypt.hash(req.body.password, 10)
-            
-            const newUserCredentials = {
-                name: req.body.name,
-                email: req.body.email,
-                password: hashedPass
-            }
-            
-            if (!users) {
-                console.log("Not existing users in database, adding the first one");
-    
-                if (insertError) {
-                    registrationNotification(app, "Something went wrong registering you. Please try again.")
-
-                    return res.redirect("/register");
-                }
-
-                console.log("New user added succesfully!")
-                
-                loginNotification(app, "You have registered succesfully! Please Log in.")
-                
-                res.redirect("/login");
-            }
-
-            const existingUser = users.some(user => {
-                return user.email === req.body.email
-            })
-
-            if (existingUser) {
-                console.log("This user already exists")
-
-                registrationNotification(app, "This user already exists.")
-
-                res.redirect("/register");
-            }
-            else {
-                insertUserToDB(newUserCredentials, (insertError) => {
-                    if (insertError) {
-                        registrationNotification(app, "Something went wrong registering you. Please try again.")
-
-                        return res.redirect("/register");
-                    }
-
-                    console.log("New user added succesfully!")
-                    
-                    loginNotification(app, "You have registered succesfully! Please Log in.")
-                    
-                    res.redirect("/login");
-                });
-            }
-        } catch {
-            console.log("Something went wrong registering you.");
-
-            registrationNotification(app, "Something went wrong, please try again.")
-            res.redirect("/register");
-        }
-    })
+    register(req, res, app, dbPool);
 })
 
 app.post("/login", (req, res) => {
-    getUsersFromDB(async (connectionError, retrivingError, users) => {
-        if (connectionError) {
-            loginNotification(app, "Something went wrong connecting to the Server. Please try to log in again.")
-
-            return res.redirect("/login");
-        }
-
-        if (retrivingError) {
-            loginNotification(app, "Something went wrong. Please try to log in again.")
-
-            return res.redirect("/login");
-        }
-
-        if (!users) {
-            console.log("Data base is empty")
-
-            loginNotification(app, "This user doesn't exist. Sign up please!")
-
-            return res.redirect("/login");
-        }
-        const logingUser = users.find(user => {
-            return user.email === req.body.email
-        })
-
-        if (!logingUser) {
-            console.log("User doesn't exist")
-
-            loginNotification(app, "User doesn't exist. Please register first.")
-
-            return res.redirect("/login")
-        }
-
-        try {
-            const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password);
-
-            if (logingUser && isPasswordMatched) {
-                req.session.userId = logingUser.id;
-    
-                req.session.userName = logingUser.name;
-    
-                res.redirect("/dashboard");
-            }
-            else {
-                console.log("Wrong credentials")
-
-                loginNotification(app, "Wrong user name or password.")
-
-                res.redirect("/login")
-            }
-        } catch {
-            console.log("Catched")
-
-            loginNotification(app, "Wrong user name or password.")
-
-            res.redirect("/login")
-        }
-    })
+    login(req, res, app, dbPool);
 })
 
 app.post("/logout", (req, res) => {
-    logOut(req, res, sessionStore)
+    logOut(req, res, sessionStore);
 })
 
 
@@ -410,7 +244,6 @@ const createExcelFile = (req, res) => {
 
     extractData(req.body, workBook, style)
 
-
     workBook.write(
         `${excelFileName}`,
         (err) => {
@@ -452,6 +285,210 @@ app.post("/downloadExcelFile", (req, res) => {
 app.listen(SERVER_PORT, () => {
     console.log(`Server is running at port: ${SERVER_PORT}`)
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // INSERT USERS TO DB
+// const insertUserToDB = (newUser, callback) => {
+//     const insertIntoUsers = `INSERT INTO users Set ?`;
+
+//     dbPool.query(insertIntoUsers, newUser, (insertError, result) => {
+//         if (insertError) {
+//             console.log("There was an error inserting the user in the DB");
+            
+//             return callback(insertError);
+//         }
+//         callback(insertError, result);
+//     })
+// }
+
+// // GET USERS FROM DB
+// const getUsersFromDB = (callback) => {
+//     const selectAllUsers = `SELECT * FROM users`;
+
+//     dbPool.getConnection((connectionError, connection) => {
+//         if (connectionError) {
+//             console.log("Didn't manage to connect to Data Base", connectionError.code);
+            
+//             return callback(connectionError);
+//         } 
+
+//         console.log("Data Base Connected");
+
+//         connection.query(selectAllUsers, (retrivingError, users) => {
+//             if (retrivingError) {
+//                 console.log("There was an error retriving the users from the DB", retrivingError.code);
+                
+//                 return callback(connectionError, retrivingError);
+//             }
+
+//             console.log("Users retrieved");
+            
+//             callback(connectionError, retrivingError, users);
+
+//             connection.release();
+//         })
+//     })
+// }
+
+// app.post("/register", (req, res) => {
+//     getUsersFromDB(async (connectionError, retrivingError, users) => {
+//         if (connectionError) {
+//             registrationNotification(app, "Something went wrong connecting to the Server. Please try to register again.")
+
+//             return res.redirect("/register");
+//         }
+
+//         if (retrivingError) {
+//             registrationNotification(app, "Something went wrong. Please try to register again.")
+
+//             return res.redirect("/register");
+//         }
+
+//         try {
+//             const hashedPass = await bcrypt.hash(req.body.password, 10)
+            
+//             const newUserCredentials = {
+//                 name: req.body.name,
+//                 email: req.body.email,
+//                 password: hashedPass
+//             }
+            
+//             // if (!users) {
+//             //     console.log("Not existing users in database, adding the first one");
+    
+//             //     if (insertError) {
+//             //         registrationNotification(app, "Something went wrong registering you. Please try again.")
+
+//             //         return res.redirect("/register");
+//             //     }
+
+//             //     console.log("New user added succesfully!")
+                
+//             //     loginNotification(app, "You have registered succesfully! Please Log in.")
+                
+//             //     res.redirect("/login");
+//             // }
+
+//             const existingUser = users.some(user => {
+//                 return user.email === req.body.email
+//             })
+
+//             if (existingUser) {
+//                 console.log("This user already exists")
+
+//                 registrationNotification(app, "This user already exists.")
+
+//                 res.redirect("/register");
+//             }
+//             else {
+//                 insertUserToDB(newUserCredentials, (insertError) => {
+//                     if (insertError) {
+//                         registrationNotification(app, "Something went wrong registering you. Please try again.")
+
+//                         return res.redirect("/register");
+//                     }
+
+//                     console.log("New user added succesfully!")
+                    
+//                     loginNotification(app, "You have registered succesfully! Please Log in.")
+                    
+//                     res.redirect("/login");
+//                 });
+//             }
+//         } catch {
+//             console.log("Catched Error. Something went wrong registering you.");
+
+//             registrationNotification(app, "Something went wrong, please try again.");
+
+//             res.redirect("/register");
+//         }
+//     })
+// })
+
+// app.post("/login", (req, res) => {
+//     getUsersFromDB(async (connectionError, retrivingError, users) => {
+//         if (connectionError) {
+//             loginNotification(app, "Something went wrong connecting to the Server. Please try to log in again.")
+
+//             return res.redirect("/login");
+//         }
+
+//         if (retrivingError) {
+//             loginNotification(app, "Something went wrong. Please try to log in again.")
+
+//             return res.redirect("/login");
+//         }
+
+//         if (!users) {
+//             console.log("Data base is empty")
+
+//             loginNotification(app, "This user doesn't exist. Sign up please!")
+
+//             return res.redirect("/login");
+//         }
+//         const logingUser = users.find(user => {
+//             return user.email === req.body.email
+//         })
+
+//         if (!logingUser) {
+//             console.log("User doesn't exist")
+
+//             loginNotification(app, "User doesn't exist. Please register first.")
+
+//             return res.redirect("/login")
+//         }
+
+//         try {
+//             const isPasswordMatched = await bcrypt.compare(req.body.password, logingUser.password);
+
+//             if (logingUser && isPasswordMatched) {
+//                 req.session.userId = logingUser.id;
+    
+//                 req.session.userName = logingUser.name;
+    
+//                 res.redirect("/dashboard");
+//             }
+//             else {
+//                 console.log("Wrong credentials")
+
+//                 loginNotification(app, "Wrong user name or password.")
+
+//                 res.redirect("/login")
+//             }
+//         } catch {
+//             console.log("Catched")
+
+//             loginNotification(app, "Wrong user name or password.")
+
+//             res.redirect("/login")
+//         }
+//     })
+// })
+
+
+
+
+
+
+
 
 
 
