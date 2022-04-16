@@ -11,7 +11,7 @@ export const csvFileVatValueCell = 9;
 export const txtFileVatValueCell = 10;
 
 // Add the specific entry number generated in each txt row excluding the very fist number which will be generated here in the program.
-export const txtIdEntryNumber = ["01", "03"]
+export const txtIdEntryNumber = ["01", "02", "03"];
 
 export const txtListDescription = document.querySelector(".inputs-section__txt-list-description");
 export const csvListDescription = document.querySelector(".inputs-section__csv-list-description");

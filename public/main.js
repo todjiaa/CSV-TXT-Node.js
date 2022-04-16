@@ -51,13 +51,10 @@ const compareFilesInit = () => {
     }
 } 
 
-
 const downloadFile = (resultObject) => {
-
     downloadButton.disabled = true;
     addRemoveClass(downloadButton, "add", "disabled");
     addRemoveClass(downloadButton, "add", "loading-gif");
-
 
     const optionsCsvFile = {
         method: "POST",
